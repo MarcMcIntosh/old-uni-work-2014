@@ -1,0 +1,49 @@
+<h1 class="ui header">Create an account <div class="sub header">disabled for security purposes</div></h1>
+
+<div class="ui center aligned basic segment">
+    <h3 class="ui center aligned dividing header">Social media Intergration <div class="sub header">Disabled until the appropriate API key is generated/registered for provider</div></h3>
+    {{#each providers}}
+    	<div class="huge ui {{name}} icon button" href="/auth/{{slug}}"><i class="{{name}} icon"></i>{{name}}</div>
+    {{/each}}
+
+    <div class="ui horizontal divider">Or</div>
+    
+    <h3 class="ui header"> Local Registration</h3>
+	<form class="ui form" role="form" action="/auth/local/register" method="post">
+
+
+    	<div class="ui center aligned basic segment">
+
+            	<div class="field">
+                	<div class="ui input">
+                		<label>User Name</label>
+                		<input name="username" type="text" placeholder="ninja-Kittens09">
+	                </div>
+    	        </div>
+
+        	    <div class="field">
+            	    <div class="ui input">
+                	    <label for="inputUsernameEmail">Email</label>
+                    	<input name="email" type="email" id="inputUsernameEmail">
+	                </div>
+    	        </div>
+
+        	    <div class="field">
+            	    <div class="ui input">
+                	    <label for="inputPassword">Password</label>
+                    	<input name="password" type="password" id="inputPassword">
+	                </div>
+    	        </div>
+
+        	    <div class="field">
+            	    <div class="ui input">
+                	    <label for="confirmPassword">Confirm Password</label>
+                    	<input name="confirmPassword" type="password" id="confirmPassword">
+                	</div>
+	            </div>
+    	    
+    	</div>
+
+    	<button type="submit" class="ui submit button">Register</button>
+    </form>
+</div>

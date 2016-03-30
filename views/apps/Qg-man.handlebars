@@ -1,0 +1,118 @@
+<h1 class="ui header">QwewQgig Management demo</h1>
+<div class="divider"></div>
+<div class="page-header"> <h1> Premises Managment <small> Add, update, delete Markers</small></h1> </div>
+<div class="container">
+	<div id="map_canvas" class="col-sm-6"></div>
+	<div class="col-sm-6">
+		<lable for="address">Address</lable>
+		<textarea class="form-control" id="address" name="" placeholder="address" row="3"></textarea>
+		<button id="validate" class="btn btn-primary" value="Validate" onClick="validate()"/>Validate</button>
+		<table>
+			<tr><td align="left">Valid:</td><td><input type="text" id="valid" size="20"/></td></tr>
+			<tr><td align="right">Matched:</td><td><input type="text" id="type" size="20"/></td></tr>
+		</table>
+	</div>
+</div>
+<div class="container">
+	<div class="col-sm-6">
+		<div id="map"></div>
+	</div>
+	<div class="col-sm-6">
+		<form method="post" action="/Qg/create" role="form">
+			<div class="ui form">
+				<div class="field">
+					<input class="form-control" type="text" id="result" name="address" placeholder="auto-formated address" /><br />
+				</div>
+				<h3> You want the format to look like this location: {"type" : "Point", "coordinates" : [21.016667, 52.233333]}</h3>
+				<div class="field">
+					<lable> type </lable>
+				<div class="ui input"><input type="text" id="type" value="Point" /><br /></div></div>
+				<div class="field">
+					<label>lat</label>
+					<div class="ui input"><input type="text" id="lat" name="lat" placeholder="lat"/><br /></div>
+				</div>
+				<div class="field">
+					<label>lng</label>
+					<div class="ui input"><input type="text" id="lng" name="lng" placeholder="lng"/><br /></div>
+				</div>
+
+				<div class="field">
+					<label>Colour</label>
+					<div class="ui selection dropdown">
+        				<input name="color" id="color" type="hidden">
+        				<div class="default text">Colour</div>
+        				<i class="dropdown icon"></i>
+        				<div class="menu">
+          					<div class="item" data-value="red">red</div>
+          					<div class="item" data-value="orange">Orange</div>
+          					<div class="item" data-value="Green">Green</div>
+          					<div class="item" data-value="purple">Purple</div>
+          					<div class="item" data-value="blue">Blue</div>
+          					<div class="item" data-value="darkred">Dark Red</div>
+          					<div class="item" data-value="darkgreen">Dark Green</div>
+          					<div class="item" data-value="darkpurple">Dark Purple</div>
+          					<div class="item" data-value="cadetblue">Cadet Blue</div>
+        				</div>
+        			</div>
+        		</div>
+        		<div class="field">
+        		<label>Icon</label>
+        			<div class="ui labeled icon dropdown button"><span class="text">Icon</span>
+        			<input name="syntax" id="syntax" type="hidden">
+        			<i class="dropdown icon"></i>
+        			<div class="menu">
+<div class="item" data-value="ion ion-bag"><i class='ion ion-bag'></i></div>
+<div class="item" data-value="ion ion-coffe"><i class='ion ion-coffee'></i></div>
+<div class="item" data-value="ion ion-happy"><i class='ion ion-happy'></i></div>
+<div class="item" data-value="ion ion-headphone"><i class='ion ion-headphone'></i></div>
+<div class="item" data-value="ion ion-home"><i class='ion ion-home'></i></div>
+<div class="item" data-value="ion ion-icecream"><i class='ion ion-icecream'></i></div>
+<div class="item" data-value="ion ion-images"><i class='ion ion-images'></i></div>
+<div class="item" data-value="ion ion-information-circled"><i class='ion ion-information-circled'></i></div>
+<div class="item" data-value="ion ion-mic-b"><i class='ion ion-mic-b'></i></div>
+<div class="item" data-value="ion ion-music-note"><i class='ion ion-music-note'></i></div>
+<div class="item" data-value="ion ion-pizza"><i class='ion ion-pizza'></i></div>
+<div class="item" data-value="ion ion-pricetags"><i class='ion ion-pricetags'></i></div>
+<div class="item" data-value="ion ion-scissors"><i class='ion ion-scissors'></i></div>
+<div class="item" data-value="ion ion-settings"><i class='ion ion-settings'></i></div>
+<div class="item" data-value="ion ion-university"><i class='ion ion-university'></i></div>
+<div class="item" data-value="ion ion-wineglass"><i class='ion ion-wineglass'></i></div>
+<div class="item" data-value="fa fa-at"><i class='fa fa-at'></i></div>
+<div class="item" data-value="fa fa-barcode"><i class='fa fa-barcode'></i></div>
+<div class="item" data-value="fa fa-beer"><i class='fa fa-beer'></i></div>
+<div class="item" data-value="fa fa-bell-o"><i class='fa fa-bell-o'></i></div>
+<div class="item" data-value="fa fa-birthday-cake"><i class='fa fa-birthday-cake'></i></div>
+<div class="item" data-value="fa fa-bus"><i class='fa fa-bus'></i></div>
+<div class="item" data-value="fa fa-cab"><i class='fa fa-cab'></i></div>
+<div class="item" data-value="a fa-car"><i class='fa fa-car'></i></div>
+<div class="item" data-value="fa fa-child"><i class='fa fa-child'></i></div>
+<div class="item" data-value="fa fa-empire"><i class='fa fa-empire'></i></div>
+<div class="item" data-value="fa fa-envelope-o"><i class='fa fa-envelope-o'></i></div>
+<div class="item" data-value="fa fa-group"><i class='fa fa-group'></i></div>
+<div class="item" data-value="fa fa-paw"><i class='fa fa-paw'></i></div>
+<div class="item" data-value="fa fa-plane"><i class='fa fa-plane'></i></div>
+<div class="item" data-value="fa fa-rebel"><i class='fa fa-rebel'></i></div>
+<div class="item" data-value="fa fa-shopping-cart"><i class='fa fa-shopping-cart'></i></div>
+<div class="item" data-value="fa fa-soccer-ball-o"><i class='fa fa-soccer-ball-o'></i></div>
+<div class="item" data-value="fa fa-ticket"><i class='fa fa-ticket'></i></div>
+<div class="item" data-value="fa fa-trophy"><i class='fa fa-trophy'></i></div>
+<div class="item" data-value="fa fa-university"><i class='fa fa-university'></i></div>
+<div class="item" data-value="fa fa-cutlery"><i class='fa fa-cutlery'></i></div>
+<div class="item" data-value="glyphicon glyphicon-glass"><i class='glyphicon glyphicon-glass'></i></div>
+<div class="item" data-value="glyphicon glyphicon-film"><i class='glyphicon glyphicon-film'></i></div>
+<div class="item" data-value="glyphicon glyphicon-gift"><i class='glyphicon glyphicon-gift'></i></div>
+<div class="item" data-value="glyphicon glyphicon-tree-deciduous"><i class='glyphicon glyphicon-tree-deciduous'></i></div>
+</div>
+</div>
+</div>
+</div>
+
+
+				<input class="form-control" type="text" id="icon"
+				name="icon" placeholder="icon" /><br />
+				<input class="form-control" type="text" id="prefix" name="prefix" placeholder="prefix" /><br />
+				<button type="submit" class="btn">submit</button>
+			</div>
+		</form>
+	</div>
+</div>

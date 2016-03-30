@@ -1,0 +1,28 @@
+<div class="ui inverted menu">
+  <a class="item" href="/">
+    <i class="home icon"></i> Home
+  </a>
+  <a class="ui toggle item" >
+    <i class="exchange icon"></i>
+    Menu
+  </a>
+  {{#if session.authenticated}}
+    <a class="item" href="/presentations">
+        Presentations
+    </a>
+    <a class="item" href="/applications">Applications
+
+    </a>
+    <a class="item" href="/ebusiness-strategy">E-business</a>
+    <div class="right menu">
+    <a class="item" href="/logout">
+        <i class="sign out icon"></i> Log Out
+    </a>
+    {{else}}
+    <div class="right menu">
+    <a class="item" href="/login" >
+        <i class="sign in icon"></i>
+    </a>
+    {{/if}}
+    </div>
+</div>

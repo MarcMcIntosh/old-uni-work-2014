@@ -1,0 +1,1694 @@
+<script>
+//# dc.js Getting Started and How-To Guide
+'use strict';
+
+/* jshint globalstrict: true */
+/* global dc,d3,crossfilter,colorbrewer */
+
+// ### Create Chart Objects
+// Create chart objects assocated with the container elements identified by the css selector.
+// Note: It is often a good idea to have these objects accessible at the global scope so that they can be modified or
+// filtered by other page controls.
+var gainOrLossChart = dc.pieChart('#gain-loss-chart');
+var fluctuationChart = dc.barChart('#fluctuation-chart');
+var quarterChart = dc.pieChart('#quarter-chart');
+var dayOfWeekChart = dc.rowChart('#day-of-week-chart');
+var moveChart = dc.lineChart('#monthly-move-chart');
+var volumeChart = dc.barChart('#monthly-volume-chart');
+var yearlyBubbleChart = dc.bubbleChart('#yearly-bubble-chart');
+
+// ### Anchor Div for Charts
+/*
+// A div anchor that can be identified by id
+    <div id='your-chart'></div>
+// Title or anything you want to add above the chart
+    <div id='chart'><span>Days by Gain or Loss</span></div>
+// ##### .turnOnControls()
+// If a link with css class 'reset' is present then the chart
+// will automatically turn it on/off based on whether there is filter
+// set on this chart (slice selection for pie chart and brush
+// selection for bar chart). Enable this with `chart.turnOnControls(true)`
+     <div id='chart'>
+       <a class='reset' href='javascript:myChart.filterAll();dc.redrawAll();' style='display: none;'>reset</a>
+     </div>
+// dc.js will also automatically inject applied current filter value into
+// any html element with css class set to 'filter'
+    <div id='chart'>
+        <span class='reset' style='display: none;'>Current filter: <span class='filter'></span></span>
+    </div>
+*/
+
+//### Load your data
+//Data can be loaded through regular means with your
+//favorite javascript library
+//
+//```javascript
+//d3.csv('data.csv', function(data) {...};
+//d3.json('data.json', function(data) {...};
+//jQuery.getJson('data.json', function(data){...});
+//```
+d3.csv('data/ndx.csv', function (data) {
+    /* since its a csv file we need to format the data a bit */
+    var dateFormat = d3.time.format('%m/%d/%Y');
+    var numberFormat = d3.format('.2f');
+
+    data.forEach(function (d) {
+        d.dd = dateFormat.parse(d.date);
+        d.month = d3.time.month(d.dd); // pre-calculate month for better performance
+        d.close = +d.close; // coerce to number
+        d.open = +d.open;
+    });
+
+    //### Create Crossfilter Dimensions and Groups
+    //See the [crossfilter API](https://github.com/square/crossfilter/wiki/API-Reference) for reference.
+    var ndx = crossfilter(data);
+    var all = ndx.groupAll();
+
+    // dimension by year
+    var yearlyDimension = ndx.dimension(function (d) {
+        return d3.time.year(d.dd).getFullYear();
+    });
+    // maintain running tallies by year as filters are applied or removed
+    var yearlyPerformanceGroup = yearlyDimension.group().reduce(
+        /* callback for when data is added to the current filter results */
+        function (p, v) {
+            ++p.count;
+            p.absGain += v.close - v.open;
+            p.fluctuation += Math.abs(v.close - v.open);
+            p.sumIndex += (v.open + v.close) / 2;
+            p.avgIndex = p.sumIndex / p.count;
+            p.percentageGain = (p.absGain / p.avgIndex) * 100;
+            p.fluctuationPercentage = (p.fluctuation / p.avgIndex) * 100;
+            return p;
+        },
+        /* callback for when data is removed from the current filter results */
+        function (p, v) {
+            --p.count;
+            p.absGain -= v.close - v.open;
+            p.fluctuation -= Math.abs(v.close - v.open);
+            p.sumIndex -= (v.open + v.close) / 2;
+            p.avgIndex = p.sumIndex / p.count;
+            p.percentageGain = (p.absGain / p.avgIndex) * 100;
+            p.fluctuationPercentage = (p.fluctuation / p.avgIndex) * 100;
+            return p;
+        },
+        /* initialize p */
+        function () {
+            return {
+                count: 0,
+                absGain: 0,
+                fluctuation: 0,
+                fluctuationPercentage: 0,
+                sumIndex: 0,
+                avgIndex: 0,
+                percentageGain: 0
+            };
+        }
+    );
+
+    // dimension by full date
+    var dateDimension = ndx.dimension(function (d) {
+        return d.dd;
+    });
+
+    // dimension by month
+    var moveMonths = ndx.dimension(function (d) {
+        return d.month;
+    });
+    // group by total movement within month
+    var monthlyMoveGroup = moveMonths.group().reduceSum(function (d) {
+        return Math.abs(d.close - d.open);
+    });
+    // group by total volume within move, and scale down result
+    var volumeByMonthGroup = moveMonths.group().reduceSum(function (d) {
+        return d.volume / 500000;
+    });
+    var indexAvgByMonthGroup = moveMonths.group().reduce(
+        function (p, v) {
+            ++p.days;
+            p.total += (v.open + v.close) / 2;
+            p.avg = Math.round(p.total / p.days);
+            return p;
+        },
+        function (p, v) {
+            --p.days;
+            p.total -= (v.open + v.close) / 2;
+            p.avg = p.days ? Math.round(p.total / p.days) : 0;
+            return p;
+        },
+        function () {
+            return {days: 0, total: 0, avg: 0};
+        }
+    );
+
+    // create categorical dimension
+    var gainOrLoss = ndx.dimension(function (d) {
+        return d.open > d.close ? 'Loss' : 'Gain';
+    });
+    // produce counts records in the dimension
+    var gainOrLossGroup = gainOrLoss.group();
+
+    // determine a histogram of percent changes
+    var fluctuation = ndx.dimension(function (d) {
+        return Math.round((d.close - d.open) / d.open * 100);
+    });
+    var fluctuationGroup = fluctuation.group();
+
+    // summerize volume by quarter
+    var quarter = ndx.dimension(function (d) {
+        var month = d.dd.getMonth();
+        if (month <= 2) {
+            return 'Q1';
+        } else if (month > 2 && month <= 5) {
+            return 'Q2';
+        } else if (month > 5 && month <= 8) {
+            return 'Q3';
+        } else {
+            return 'Q4';
+        }
+    });
+    var quarterGroup = quarter.group().reduceSum(function (d) {
+        return d.volume;
+    });
+
+    // counts per weekday
+    var dayOfWeek = ndx.dimension(function (d) {
+        var day = d.dd.getDay();
+        var name = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        return day + '.' + name[day];
+    });
+    var dayOfWeekGroup = dayOfWeek.group();
+
+    //### Define Chart Attributes
+    //Define chart attributes using fluent methods. See the
+    // [dc API Reference](https://github.com/dc-js/dc.js/blob/master/web/docs/api-latest.md) for more information
+    //
+
+    //#### Bubble Chart
+    //Create a bubble chart and use the given css selector as anchor. You can also specify
+    //an optional chart group for this chart to be scoped within. When a chart belongs
+    //to a specific group then any interaction with such chart will only trigger redraw
+    //on other charts within the same chart group.
+    /* dc.bubbleChart('#yearly-bubble-chart', 'chartGroup') */
+    yearlyBubbleChart
+        .width(990) // (optional) define chart width, :default = 200
+        .height(250)  // (optional) define chart height, :default = 200
+        .transitionDuration(1500) // (optional) define chart transition duration, :default = 750
+        .margins({top: 10, right: 50, bottom: 30, left: 40})
+        .dimension(yearlyDimension)
+        //Bubble chart expect the groups are reduced to multiple values which would then be used
+        //to generate x, y, and radius for each key (bubble) in the group
+        .group(yearlyPerformanceGroup)
+        .colors(colorbrewer.RdYlGn[9]) // (optional) define color function or array for bubbles
+        .colorDomain([-500, 500]) //(optional) define color domain to match your data domain if you want to bind data or
+                                  //color
+        //##### Accessors
+        //Accessor functions are applied to each value returned by the grouping
+        //
+        //* `.colorAccessor` The returned value will be mapped to an internal scale to determine a fill color
+        //* `.keyAccessor` Identifies the `X` value that will be applied against the `.x()` to identify pixel location
+        //* `.valueAccessor` Identifies the `Y` value that will be applied agains the `.y()` to identify pixel location
+        //* `.radiusValueAccessor` Identifies the value that will be applied agains the `.r()` determine radius size,
+        //*     by default this maps linearly to [0,100]
+        .colorAccessor(function (d) {
+            return d.value.absGain;
+        })
+        .keyAccessor(function (p) {
+            return p.value.absGain;
+        })
+        .valueAccessor(function (p) {
+            return p.value.percentageGain;
+        })
+        .radiusValueAccessor(function (p) {
+            return p.value.fluctuationPercentage;
+        })
+        .maxBubbleRelativeSize(0.3)
+        .x(d3.scale.linear().domain([-2500, 2500]))
+        .y(d3.scale.linear().domain([-100, 100]))
+        .r(d3.scale.linear().domain([0, 4000]))
+        //##### Elastic Scaling
+        //`.elasticX` and `.elasticX` determine whether the chart should rescale each axis to fit data.
+        //The `.yAxisPadding` and `.xAxisPadding` add padding to data above and below their max values in the same unit
+        //domains as the Accessors.
+        .elasticY(true)
+        .elasticX(true)
+        .yAxisPadding(100)
+        .xAxisPadding(500)
+        .renderHorizontalGridLines(true) // (optional) render horizontal grid lines, :default=false
+        .renderVerticalGridLines(true) // (optional) render vertical grid lines, :default=false
+        .xAxisLabel('Index Gain') // (optional) render an axis label below the x axis
+        .yAxisLabel('Index Gain %') // (optional) render a vertical axis lable left of the y axis
+        //#### Labels and  Titles
+        //Labels are displaed on the chart for each bubble. Titles displayed on mouseover.
+        .renderLabel(true) // (optional) whether chart should render labels, :default = true
+        .label(function (p) {
+            return p.key;
+        })
+        .renderTitle(true) // (optional) whether chart should render titles, :default = false
+        .title(function (p) {
+            return [
+                p.key,
+                'Index Gain: ' + numberFormat(p.value.absGain),
+                'Index Gain in Percentage: ' + numberFormat(p.value.percentageGain) + '%',
+                'Fluctuation / Index Ratio: ' + numberFormat(p.value.fluctuationPercentage) + '%'
+            ].join('\n');
+        })
+        //#### Customize Axis
+        //Set a custom tick format. Note `.yAxis()` returns an axis object, so any additional method chaining applies
+        //to the axis, not the chart.
+        .yAxis().tickFormat(function (v) {
+            return v + '%';
+        });
+
+    // #### Pie/Donut Chart
+    // Create a pie chart and use the given css selector as anchor. You can also specify
+    // an optional chart group for this chart to be scoped within. When a chart belongs
+    // to a specific group then any interaction with such chart will only trigger redraw
+    // on other charts within the same chart group.
+
+    gainOrLossChart
+        .width(180) // (optional) define chart width, :default = 200
+        .height(180) // (optional) define chart height, :default = 200
+        .radius(80) // define pie radius
+        .dimension(gainOrLoss) // set dimension
+        .group(gainOrLossGroup) // set group
+        /* (optional) by default pie chart will use group.key as its label
+         * but you can overwrite it with a closure */
+        .label(function (d) {
+            if (gainOrLossChart.hasFilter() && !gainOrLossChart.hasFilter(d.key)) {
+                return d.key + '(0%)';
+            }
+            var label = d.key;
+            if (all.value()) {
+                label += '(' + Math.floor(d.value / all.value() * 100) + '%)';
+            }
+            return label;
+        }) /*
+        // (optional) whether chart should render labels, :default = true
+        .renderLabel(true)
+        // (optional) if inner radius is used then a donut chart will be generated instead of pie chart
+        .innerRadius(40)
+        // (optional) define chart transition duration, :default = 350
+        .transitionDuration(500)
+        // (optional) define color array for slices
+        .colors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+        // (optional) define color domain to match your data domain if you want to bind data or color
+        .colorDomain([-1750, 1644])
+        // (optional) define color value accessor
+        .colorAccessor(function(d, i){return d.value;})
+        */;
+
+    quarterChart.width(180)
+        .height(180)
+        .radius(80)
+        .innerRadius(30)
+        .dimension(quarter)
+        .group(quarterGroup);
+
+    //#### Row Chart
+    dayOfWeekChart.width(180)
+        .height(180)
+        .margins({top: 20, left: 10, right: 10, bottom: 20})
+        .group(dayOfWeekGroup)
+        .dimension(dayOfWeek)
+        // assign colors to each value in the x scale domain
+        .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+        .label(function (d) {
+            return d.key.split('.')[1];
+        })
+        // title sets the row text
+        .title(function (d) {
+            return d.value;
+        })
+        .elasticX(true)
+        .xAxis().ticks(4);
+
+    //#### Bar Chart
+    // Create a bar chart and use the given css selector as anchor. You can also specify
+    // an optional chart group for this chart to be scoped within. When a chart belongs
+    // to a specific group then any interaction with such chart will only trigger redraw
+    // on other charts within the same chart group.
+    /* dc.barChart('#volume-month-chart') */
+    fluctuationChart.width(420)
+        .height(180)
+        .margins({top: 10, right: 50, bottom: 30, left: 40})
+        .dimension(fluctuation)
+        .group(fluctuationGroup)
+        .elasticY(true)
+        // (optional) whether bar should be center to its x value. Not needed for ordinal chart, :default=false
+        .centerBar(true)
+        // (optional) set gap between bars manually in px, :default=2
+        .gap(1)
+        // (optional) set filter brush rounding
+        .round(dc.round.floor)
+        .alwaysUseRounding(true)
+        .x(d3.scale.linear().domain([-25, 25]))
+        .renderHorizontalGridLines(true)
+        // customize the filter displayed in the control span
+        .filterPrinter(function (filters) {
+            var filter = filters[0], s = '';
+            s += numberFormat(filter[0]) + '% -> ' + numberFormat(filter[1]) + '%';
+            return s;
+        });
+
+    // Customize axis
+    fluctuationChart.xAxis().tickFormat(
+        function (v) { return v + '%'; });
+    fluctuationChart.yAxis().ticks(5);
+
+    //#### Stacked Area Chart
+    //Specify an area chart, by using a line chart with `.renderArea(true)`
+    moveChart
+        .renderArea(true)
+        .width(990)
+        .height(200)
+        .transitionDuration(1000)
+        .margins({top: 30, right: 50, bottom: 25, left: 40})
+        .dimension(moveMonths)
+        .mouseZoomable(true)
+        // Specify a range chart to link the brush extent of the range with the zoom focue of the current chart.
+        .rangeChart(volumeChart)
+        .x(d3.time.scale().domain([new Date(1985, 0, 1), new Date(2012, 11, 31)]))
+        .round(d3.time.month.round)
+        .xUnits(d3.time.months)
+        .elasticY(true)
+        .renderHorizontalGridLines(true)
+        .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
+        .brushOn(false)
+        // Add the base layer of the stack with group. The second parameter specifies a series name for use in the
+        // legend
+        // The `.valueAccessor` will be used for the base layer
+        .group(indexAvgByMonthGroup, 'Monthly Index Average')
+        .valueAccessor(function (d) {
+            return d.value.avg;
+        })
+        // stack additional layers with `.stack`. The first paramenter is a new group.
+        // The second parameter is the series name. The third is a value accessor.
+        .stack(monthlyMoveGroup, 'Monthly Index Move', function (d) {
+            return d.value;
+        })
+        // title can be called by any stack layer.
+        .title(function (d) {
+            var value = d.value.avg ? d.value.avg : d.value;
+            if (isNaN(value)) {
+                value = 0;
+            }
+            return dateFormat(d.key) + '\n' + numberFormat(value);
+        });
+
+    volumeChart.width(990)
+        .height(40)
+        .margins({top: 0, right: 50, bottom: 20, left: 40})
+        .dimension(moveMonths)
+        .group(volumeByMonthGroup)
+        .centerBar(true)
+        .gap(1)
+        .x(d3.time.scale().domain([new Date(1985, 0, 1), new Date(2012, 11, 31)]))
+        .round(d3.time.month.round)
+        .alwaysUseRounding(true)
+        .xUnits(d3.time.months);
+
+    /*
+    //#### Data Count
+    // Create a data count widget and use the given css selector as anchor. You can also specify
+    // an optional chart group for this chart to be scoped within. When a chart belongs
+    // to a specific group then any interaction with such chart will only trigger redraw
+    // on other charts within the same chart group.
+    <div id='data-count'>
+        <span class='filter-count'></span> selected out of <span class='total-count'></span> records
+    </div>
+    */
+    dc.dataCount('.dc-data-count')
+        .dimension(ndx)
+        .group(all)
+        // (optional) html, for setting different html for some records and all records.
+        // .html replaces everything in the anchor with the html given using the following function.
+        // %filter-count and %total-count are replaced with the values obtained.
+        .html({
+            some:'<strong>%filter-count</strong> selected out of <strong>%total-count</strong> records' +
+                ' | <a href=\'javascript:dc.filterAll(); dc.renderAll();\'\'>Reset All</a>',
+            all:'All records selected. Please click on the graph to apply filters.'
+        });
+
+    /*
+    //#### Data Table
+    // Create a data table widget and use the given css selector as anchor. You can also specify
+    // an optional chart group for this chart to be scoped within. When a chart belongs
+    // to a specific group then any interaction with such chart will only trigger redraw
+    // on other charts within the same chart group.
+    <!-- anchor div for data table -->
+    <div id='data-table'>
+        <!-- create a custom header -->
+        <div class='header'>
+            <span>Date</span>
+            <span>Open</span>
+            <span>Close</span>
+            <span>Change</span>
+            <span>Volume</span>
+        </div>
+        <!-- data rows will filled in here -->
+    </div>
+    */
+    dc.dataTable('.dc-data-table')
+        .dimension(dateDimension)
+        // data table does not use crossfilter group but rather a closure
+        // as a grouping function
+        .group(function (d) {
+            var format = d3.format('02d');
+            return d.dd.getFullYear() + '/' + format((d.dd.getMonth() + 1));
+        })
+        .size(10) // (optional) max number of records to be shown, :default = 25
+        // There are several ways to specify the columns; see the data-table documentation.
+        // This code demonstrates generating the column header automatically based on the columns.
+        .columns([
+            'date',    // d['date'], ie, a field accessor; capitalized automatically
+            'open',    // ...
+            'close',   // ...
+            {
+                label: 'Change', // desired format of column name 'Change' when used as a label with a function.
+                format: function (d) {
+                    return numberFormat(d.close - d.open);
+                }
+            },
+            'volume'   // d['volume'], ie, a field accessor; capitalized automatically
+        ])
+
+        // (optional) sort using the given field, :default = function(d){return d;}
+        .sortBy(function (d) {
+            return d.dd;
+        })
+        // (optional) sort order, :default ascending
+        .order(d3.ascending)
+        // (optional) custom renderlet to post-process chart using D3
+        .renderlet(function (table) {
+            table.selectAll('.dc-table-group').classed('info', true);
+        });
+
+    /*
+    //#### Geo Choropleth Chart
+    //Create a choropleth chart and use the given css selector as anchor. You can also specify
+    //an optional chart group for this chart to be scoped within. When a chart belongs
+    //to a specific group then any interaction with such chart will only trigger redraw
+    //on other charts within the same chart group.
+    dc.geoChoroplethChart('#us-chart')
+        .width(990) // (optional) define chart width, :default = 200
+        .height(500) // (optional) define chart height, :default = 200
+        .transitionDuration(1000) // (optional) define chart transition duration, :default = 1000
+        .dimension(states) // set crossfilter dimension, dimension key should match the name retrieved in geo json layer
+        .group(stateRaisedSum) // set crossfilter group
+        // (optional) define color function or array for bubbles
+        .colors(['#ccc', '#E2F2FF','#C4E4FF','#9ED2FF','#81C5FF','#6BBAFF','#51AEFF','#36A2FF','#1E96FF','#0089FF',
+            '#0061B5'])
+        // (optional) define color domain to match your data domain if you want to bind data or color
+        .colorDomain([-5, 200])
+        // (optional) define color value accessor
+        .colorAccessor(function(d, i){return d.value;})
+        // Project the given geojson. You can call this function mutliple times with different geojson feed to generate
+        // multiple layers of geo paths.
+        //
+        // * 1st param - geo json data
+        // * 2nd param - name of the layer which will be used to generate css class
+        // * 3rd param - (optional) a function used to generate key for geo path, it should match the dimension key
+        // in order for the coloring to work properly
+        .overlayGeoJson(statesJson.features, 'state', function(d) {
+            return d.properties.name;
+        })
+        // (optional) closure to generate title for path, :default = d.key + ': ' + d.value
+        .title(function(d) {
+            return 'State: ' + d.key + '\nTotal Amount Raised: ' + numberFormat(d.value ? d.value : 0) + 'M';
+        });
+
+        //#### Bubble Overlay Chart
+        // Create a overlay bubble chart and use the given css selector as anchor. You can also specify
+        // an optional chart group for this chart to be scoped within. When a chart belongs
+        // to a specific group then any interaction with such chart will only trigger redraw
+        // on other charts within the same chart group.
+        dc.bubbleOverlay('#bubble-overlay')
+            // bubble overlay chart does not generate it's own svg element but rather resue an existing
+            // svg to generate it's overlay layer
+            .svg(d3.select('#bubble-overlay svg'))
+            .width(990) // (optional) define chart width, :default = 200
+            .height(500) // (optional) define chart height, :default = 200
+            .transitionDuration(1000) // (optional) define chart transition duration, :default = 1000
+            .dimension(states) // set crossfilter dimension, dimension key should match the name retrieved in geo json
+                layer
+            .group(stateRaisedSum) // set crossfilter group
+            // closure used to retrieve x value from multi-value group
+            .keyAccessor(function(p) {return p.value.absGain;})
+            // closure used to retrieve y value from multi-value group
+            .valueAccessor(function(p) {return p.value.percentageGain;})
+            // (optional) define color function or array for bubbles
+            .colors(['#ccc', '#E2F2FF','#C4E4FF','#9ED2FF','#81C5FF','#6BBAFF','#51AEFF','#36A2FF','#1E96FF','#0089FF',
+                '#0061B5'])
+            // (optional) define color domain to match your data domain if you want to bind data or color
+            .colorDomain([-5, 200])
+            // (optional) define color value accessor
+            .colorAccessor(function(d, i){return d.value;})
+            // closure used to retrieve radius value from multi-value group
+            .radiusValueAccessor(function(p) {return p.value.fluctuationPercentage;})
+            // set radius scale
+            .r(d3.scale.linear().domain([0, 3]))
+            // (optional) whether chart should render labels, :default = true
+            .renderLabel(true)
+            // (optional) closure to generate label per bubble, :default = group.key
+            .label(function(p) {return p.key.getFullYear();})
+            // (optional) whether chart should render titles, :default = false
+            .renderTitle(true)
+            // (optional) closure to generate title per bubble, :default = d.key + ': ' + d.value
+            .title(function(d) {
+                return 'Title: ' + d.key;
+            })
+            // add data point to it's layer dimension key that matches point name will be used to
+            // generate bubble. multiple data points can be added to bubble overlay to generate
+            // multiple bubbles
+            .point('California', 100, 120)
+            .point('Colorado', 300, 120)
+            // (optional) setting debug flag to true will generate a transparent layer on top of
+            // bubble overlay which can be used to obtain relative x,y coordinate for specific
+            // data point, :default = false
+            .debug(true);
+    */
+
+    //#### Rendering
+    //simply call renderAll() to render all charts on the page
+    dc.renderAll();
+    /*
+    // or you can render charts belong to a specific chart group
+    dc.renderAll('group');
+    // once rendered you can call redrawAll to update charts incrementally when data
+    // change without re-rendering everything
+    dc.redrawAll();
+    // or you can choose to redraw only those charts associated with a specific chart group
+    dc.redrawAll('group');
+    */
+
+});
+</script>
+<style type="text/css">
+.subunit.SCT { fill: #ddc; }
+.subunit.WLS { fill: #cdd; }
+.subunit.NIR { fill: #cdc; }
+.subunit.ENG { fill: #dcd; }
+
+.subunit.IRL,
+.subunit-label.IRL {
+  display: none;
+}
+
+.subunit-boundary {
+  fill: none;
+  stroke: #777;
+  stroke-dasharray: 2,2;
+  stroke-linejoin: round;
+}
+
+.subunit-boundary.IRL {
+  stroke: #aaa;
+}
+
+.subunit-label {
+  fill: #777;
+  fill-opacity: .5;
+  font-size: 20px;
+  font-weight: 300;
+  text-anchor: middle;
+}
+
+.place,
+.place-label {
+  fill: #444;
+}
+/*Responceive map */
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: relative;
+    top: 10px;
+    left: 0;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+form {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+</style>
+<script>
+
+var n = 4, // number of layers
+    m = 58, // number of samples per layer
+    stack = d3.layout.stack(),
+//here's where your data goes    
+    layers = stack(d3.range(n).map(function() { return bumpLayer(m, .1); })),
+    yGroupMax = d3.max(layers, function(layer) { return d3.max(layer, function(d) { return d.y; }); }),
+    yStackMax = d3.max(layers, function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); });
+
+var margin = {top: 40, right: 10, bottom: 20, left: 10},
+    width = 480 - margin.left - margin.right,
+    height = 250 - margin.top - margin.bottom;
+
+var x = d3.scale.ordinal()
+    .domain(d3.range(m))
+    .rangeRoundBands([0, width], .08);
+
+var y = d3.scale.linear()
+    .domain([0, yStackMax])
+    .range([height, 0]);
+
+var color = d3.scale.linear()
+    .domain([0, n - 1])
+    .range(["#aad", "#556"]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .tickSize(0)
+    .tickPadding(6)
+    .orient("bottom");
+
+var svg = d3.select("div#demo-charts") 
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var layer = svg.selectAll(".layer")
+    .data(layers)
+  .enter().append("g")
+    .attr("class", "layer")
+    .style("fill", function(d, i) { return color(i); });
+
+var rect = layer.selectAll("rect")
+    .data(function(d) { return d; })
+  .enter().append("rect")
+    .attr("x", function(d) { return x(d.x); })
+    .attr("y", height)
+    .attr("width", x.rangeBand())
+    .attr("height", 0);
+
+rect.transition()
+    .delay(function(d, i) { return i * 10; })
+    .attr("y", function(d) { return y(d.y0 + d.y); })
+    .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); });
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
+d3.selectAll("input").on("change", change);
+
+var timeout = setTimeout(function() {
+  d3.select("input[value=\"grouped\"]").property("checked", true).each(change);
+}, 2000);
+
+function change() {
+  clearTimeout(timeout);
+  if (this.value === "grouped") transitionGrouped();
+  else transitionStacked();
+}
+
+function transitionGrouped() {
+  y.domain([0, yGroupMax]);
+
+  rect.transition()
+      .duration(500)
+      .delay(function(d, i) { return i * 10; })
+      .attr("x", function(d, i, j) { return x(d.x) + x.rangeBand() / n * j; })
+      .attr("width", x.rangeBand() / n)
+    .transition()
+      .attr("y", function(d) { return y(d.y); })
+      .attr("height", function(d) { return height - y(d.y); });
+}
+
+function transitionStacked() {
+  y.domain([0, yStackMax]);
+
+  rect.transition()
+      .duration(500)
+      .delay(function(d, i) { return i * 10; })
+      .attr("y", function(d) { return y(d.y0 + d.y); })
+      .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); })
+    .transition()
+      .attr("x", function(d) { return x(d.x); })
+      .attr("width", x.rangeBand());
+}
+
+// Inspired by Lee Byron's test data generator.
+function bumpLayer(n, o) {
+
+  function bump(a) {
+    var x = 1 / (.1 + Math.random()),
+        y = 2 * Math.random() - .5,
+        z = 10 / (.1 + Math.random());
+    for (var i = 0; i < n; i++) {
+      var w = (i / n - y) * z;
+      a[i] += x * Math.exp(-w * w);
+    }
+  }
+
+  var a = [], i;
+  for (i = 0; i < n; ++i) a[i] = o + o * Math.random();
+  for (i = 0; i < 5; ++i) bump(a);
+  return a.map(function(d, i) { return {x: i, y: Math.max(0, d)}; });
+}
+
+</script>
+
+<script type="text/javascript">
+d3.json("data/uk/uk.json", function (error, uk) {
+  if (error) return console.error(error);
+//  console.log(uk.features); //Works!!
+});
+</script>
+<script>
+	d3.csv("data/uk/ukdemo.csv", function (d) {
+  return {
+    code: d.lad2013_code,
+    name: d.lad2013_name,
+    country: d.country,
+    sex: d.sex,
+    age: d.Age,
+    population: +d.population_2013
+  };
+// },
+//   function(error, rows) {
+//     console.log(rows); //Works!!
+  }
+);
+</script>
+<script type="text/javascript">
+  var chart = dc.lineChart("#test");
+d3.csv("data/uk/ukdemo.csv", function(error, demograph) {
+  demograph.forEach(function(x) {
+    x.population = +x.population_2013
+  });
+  var ndx = crossfilter(demograph),
+    ageDimension = ndx.dimension(function(d) {
+      return +d.Age;}),
+    populationSumGroup = ageDimension.group().reduceSum(
+      function(d) {return d.population_2013;});
+
+  chart
+    .width(500)
+    .height(480)
+    .x(d3.scale.linear().domain([0,100]))
+    .interpolate('step-before')
+    .renderArea(true)
+    .brushOn(false)
+    .renderDataPoints(true)
+    .clipPadding(10)
+    .yAxisLabel("This is the Y Axis!")
+    .dimension(ageDimension)
+    .group(populationSumGroup);
+
+  chart.render();
+
+});
+</script>
+
+<script type="text/javascript">
+  var data = [
+    {date: "12/27/2012", http_404: 2, http_200: 190, http_302: 100},
+    {date: "12/28/2012", http_404: 2, http_200: 10, http_302: 100},
+    {date: "12/29/2012", http_404: 1, http_200: 300, http_302: 200},
+    {date: "12/30/2012", http_404: 2, http_200: 90, http_302: 0},
+    {date: "12/31/2012", http_404: 2, http_200: 90, http_302: 0},
+    {date: "01/01/2013", http_404: 2, http_200: 90, http_302: 0},
+    {date: "01/02/2013", http_404: 1, http_200: 10, http_302: 1},
+    {date: "01/03/2013", http_404: 2, http_200: 90, http_302: 0},
+    {date: "01/04/2013", http_404: 2, http_200: 90, http_302: 0},
+    {date: "01/05/2013", http_404: 2, http_200: 90, http_302: 0},
+    {date: "01/06/2013", http_404: 2, http_200: 200, http_302: 1},
+    {date: "01/07/2013", http_404: 1, http_200: 200, http_302: 100}
+    ];
+        
+var ndx = crossfilter(data);
+var parseDate = d3.time.format("%m/%d/%Y").parse;
+data.forEach(function(d) {
+  d.date = parseDate(d.date);
+  d.total= d.http_404+d.http_200+d.http_302;
+});
+//print_filter("data");  
+
+// ^^that's our x-axis data
+//get all the hits and adding them up
+var dateDim = ndx.dimension(function(d) {return d.date;});
+var hits = dateDim.group().reduceSum(function(d) {return d.total;}); 
+//then plot the min and max values
+var minDate = dateDim.bottom(1)[0].date;
+var maxDate = dateDim.top(1)[0].date;
+//now call the chart make the element(div id)
+var hitslineChart  = dc.lineChart("#chart-line-hitsperday");
+// set the charts dimension (x-axis), group (y-axis), and range 
+hitslineChart
+  .width(500).height(200)
+  .dimension(dateDim)
+  .group(hits)
+  .x(d3.time.scale().domain([minDate,maxDate])); 
+//then render
+dc.renderAll(); 
+
+
+
+
+//Print filter script
+function print_filter(filter){
+  var f=eval(filter);
+  if (typeof(f.length) != "undefined") {}else{}
+  if (typeof(f.top) != "undefined") {f=f.top(Infinity);}else{}
+  if (typeof(f.dimension) != "undefined") {f=f.dimension(function(d) { return "";}).top(Infinity);}else{}
+  console.log(filter+"("+f.length+") = "+JSON.stringify(f).replace("[","[\n\t").replace(/}\,/g,"},\n\t").replace("]","\n]"));
+}
+
+
+</script>
+<!-- sources
+help with the geo http://stackoverflow.com/questions/14492284/center-a-map-in-d3-given-a-geojson-object and here http://bost.ocks.org/mike/map/
+
+you need to add in the defer option eventually http://bl.ocks.org/mbostock/4060606
+or the xhr/get oprion as it is async https://github.com/mbostock/d3/wiki/Requests
+Now same as aboe as bellow, but withvthe demo data with age and population as the varibles
+Some helpwith d3.csv https://github.com/mbostock/d3/wiki/CSV
+-->
+<style type="text/css">
+.subunit.SCT { fill: #ddc; }
+.subunit.WLS { fill: #cdd; }
+.subunit.NIR { fill: #cdc; }
+.subunit.ENG { fill: #dcd; }
+
+.subunit.IRL,
+.subunit-label.IRL {
+  display: none;
+}
+
+.subunit-boundary {
+  fill: none;
+  stroke: #777;
+  stroke-dasharray: 2,2;
+  stroke-linejoin: round;
+}
+
+.subunit-boundary.IRL {
+  stroke: #aaa;
+}
+
+.subunit-label {
+  fill: #777;
+  fill-opacity: .5;
+  font-size: 20px;
+  font-weight: 300;
+  text-anchor: middle;
+}
+
+.place,
+.place-label {
+  fill: #444;
+}
+/*Responceive map */
+.svg-container {
+    display: inline-block;
+    position: inherit;
+    width: 100%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: relative;
+    top: 10px;
+    left: 0;
+}
+</style>
+<script>
+//Map
+var projection = d3.geo.albers()
+    .center([ 5.5, 56.4])
+    .rotate([4.4, 0])
+    .parallels([50, 60])
+    .scale(1200 * 3)
+
+var path = d3.geo.path()
+    .projection(projection)
+    .pointRadius(2);
+
+var svg = d3.select("div#ukmap")
+  .append("div")
+  .classed("svg-container", true) //container class to make it responsive
+  .append("svg")
+  //responsive SVG needs these 2 attributes and no width and height attr
+  .attr("preserveAspectRatio", "xMinYMin meet")
+  .attr("viewBox", "0 0 1000 800")
+  //class to make it responsive
+  .classed("svg-content-responsive", true); 
+
+d3.json("/data/uk/uk.json", function(error, uk) {
+  var subunits = topojson.feature(uk, uk.objects.subunits),
+      places = topojson.feature(uk, uk.objects.places);
+
+  svg.selectAll(".subunit")
+      .data(subunits.features)
+    .enter().append("path")
+      .attr("class", function(d) { return "subunit " + d.id; })
+      .attr("d", path);
+
+  svg.append("path")
+      .datum(topojson.mesh(uk, uk.objects.subunits, function(a, b) { return a !== b && a.id !== "IRL"; }))
+      .attr("d", path)
+      .attr("class", "subunit-boundary");
+
+  svg.append("path")
+      .datum(topojson.mesh(uk, uk.objects.subunits, function(a, b) { return a === b && a.id === "IRL"; }))
+      .attr("d", path)
+      .attr("class", "subunit-boundary IRL");
+
+  svg.selectAll(".subunit-label")
+      .data(subunits.features)
+    .enter().append("text")
+      .attr("class", function(d) { return "subunit-label " + d.id; })
+      .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+      .attr("dy", ".35em")
+      .text(function(d) { return d.properties.name; });
+
+  svg.append("path")
+      .datum(places)
+      .attr("d", path)
+      .attr("class", "place");
+
+  svg.selectAll(".place-label")
+      .data(places.features)
+    .enter().append("text")
+      .attr("class", "place-label")
+      .attr("transform", function(d) { return "translate(" + projection(d.geometry.coordinates) + ")"; })
+      .attr("x", function(d) { return d.geometry.coordinates[0] > -1 ? 6 : -6; })
+      .attr("dy", ".35em")
+      .style("text-anchor", function(d) { return d.geometry.coordinates[0] > -1 ? "start" : "end"; })
+      .text(function(d) { return d.properties.name; });
+});
+//End Map
+</script>
+<script>
+//Chart
+
+var n = 4, // number of layers
+    m = 58, // number of samples per layer
+    stack = d3.layout.stack(),
+    layers = stack(d3.range(n).map(function() { return bumpLayer(m, .1); })),
+    yGroupMax = d3.max(layers, function(layer) { return d3.max(layer, function(d) { return d.y; }); }),
+    yStackMax = d3.max(layers, function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); });
+
+var margin = {top: 40, right: 10, bottom: 20, left: 10},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.ordinal()
+    .domain(d3.range(m))
+    .rangeRoundBands([0, width], .08);
+
+var y = d3.scale.linear()
+    .domain([0, yStackMax])
+    .range([height, 0]);
+
+var color = d3.scale.linear()
+    .domain([0, n - 1])
+    .range(["#aad", "#556"]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .tickSize(0)
+    .tickPadding(6)
+    .orient("bottom");
+
+var svg = d3.select("#demo-chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var layer = svg.selectAll(".layer")
+    .data(layers)
+  .enter().append("g")
+    .attr("class", "layer")
+    .style("fill", function(d, i) { return color(i); });
+
+var rect = layer.selectAll("rect")
+    .data(function(d) { return d; })
+  .enter().append("rect")
+    .attr("x", function(d) { return x(d.x); })
+    .attr("y", height)
+    .attr("width", x.rangeBand())
+    .attr("height", 0);
+
+rect.transition()
+    .delay(function(d, i) { return i * 10; })
+    .attr("y", function(d) { return y(d.y0 + d.y); })
+    .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); });
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
+d3.selectAll("input").on("change", change);
+
+var timeout = setTimeout(function() {
+  d3.select("input[value=\"grouped\"]").property("checked", true).each(change);
+}, 2000);
+
+function change() {
+  clearTimeout(timeout);
+  if (this.value === "grouped") transitionGrouped();
+  else transitionStacked();
+}
+
+function transitionGrouped() {
+  y.domain([0, yGroupMax]);
+
+  rect.transition()
+      .duration(500)
+      .delay(function(d, i) { return i * 10; })
+      .attr("x", function(d, i, j) { return x(d.x) + x.rangeBand() / n * j; })
+      .attr("width", x.rangeBand() / n)
+    .transition()
+      .attr("y", function(d) { return y(d.y); })
+      .attr("height", function(d) { return height - y(d.y); });
+}
+
+function transitionStacked() {
+  y.domain([0, yStackMax]);
+
+  rect.transition()
+      .duration(500)
+      .delay(function(d, i) { return i * 10; })
+      .attr("y", function(d) { return y(d.y0 + d.y); })
+      .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); })
+    .transition()
+      .attr("x", function(d) { return x(d.x); })
+      .attr("width", x.rangeBand());
+}
+
+// Inspired by Lee Byron's test data generator.
+function bumpLayer(n, o) {
+
+  function bump(a) {
+    var x = 1 / (.1 + Math.random()),
+        y = 2 * Math.random() - .5,
+        z = 10 / (.1 + Math.random());
+    for (var i = 0; i < n; i++) {
+      var w = (i / n - y) * z;
+      a[i] += x * Math.exp(-w * w);
+    }
+  }
+
+  var a = [], i;
+  for (i = 0; i < n; ++i) a[i] = o + o * Math.random();
+  for (i = 0; i < 5; ++i) bump(a);
+  return a.map(function(d, i) { return {x: i, y: Math.max(0, d)}; });
+}
+</script>
+<script type="text/javascript">
+
+var sexRingChart   = dc.pieChart("#chart-ring-year"),
+    countryBarChart  = dc.barChart("#chart-hist-spend"),
+    populationRowChart = dc.rowChart("#chart-row-spenders");
+
+d3.csv("data/uk/ukdemo.csv", function(cvs){
+  var ndx = crossfilter(cvs),
+    ageDim  = ndx.dimension(function(d) {return +d.AGE;}),
+    populationDim = ndx.dimension(function(d) {return +d.POPULATION;}),
+    areaDim  = ndx.dimension(function(d) {return d.REGION;}),
+    countryDim = ndx.dimension(function(d) {return d.COUNTRY;}),
+    sexDim =ndx.dimension(function(d) {return d.SEX;});
+    populationPerArea = areaDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerCountry = countryDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerAge = ageDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerSex = sexDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    countryHist    = countryDim.group().reduceSum(function(d) {return +d.POPULATION/1000000;});
+
+sexRingChart
+    .width(200).height(200)
+    .dimension(sexDim)
+    .group(populationPerSex)
+    .innerRadius(50);
+
+countryBarChart
+  .width(200)
+  .height(400)
+  .barPadding(0.1)
+  .outerPadding(0.05)
+    .xAxisLabel("Country")
+    .yAxisLabel("Population (millions)")
+    .dimension(countryDim)
+    .group(countryHist)
+    .x(d3.scale.ordinal())
+    .xUnits(dc.units.ordinal);
+
+countryBarChart.xAxis().ticks();
+countryBarChart.yAxis().ticks();
+
+populationRowChart
+    .width(350).height(200)
+    .dimension(areaDim)
+    .group(populationPerArea)
+    .elasticX(true);
+dc.renderAll();
+});
+</script>
+
+<!-- merge chart -->
+<script type="text/javascript">
+//Chart
+
+var n = 4, // number of layers
+    m = 58, // number of samples per layer
+    stack = d3.layout.stack(),
+    layers = stack(d3.range(n).map(function() { return bumpLayer(m, .1); })),
+    yGroupMax = d3.max(layers, function(layer) { return d3.max(layer, function(d) { return d.y; }); }),
+    yStackMax = d3.max(layers, function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); });
+
+var margin = {top: 40, right: 10, bottom: 20, left: 10},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.ordinal()
+    .domain(d3.range(m))
+    .rangeRoundBands([0, width], .08);
+
+var y = d3.scale.linear()
+    .domain([0, yStackMax])
+    .range([height, 0]);
+
+var color = d3.scale.linear()
+    .domain([0, n - 1])
+    .range(["#aad", "#556"]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .tickSize(0)
+    .tickPadding(6)
+    .orient("bottom");
+
+// var svg = d3.select("#demo-chart").append("svg")
+//     .attr("width", width + margin.left + margin.right)
+//     .attr("height", height + margin.top + margin.bottom)
+//   .append("g")
+//     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var layer = svg.selectAll(".layer")
+    .data(layers)
+  .enter().append("g")
+    .attr("class", "layer")
+    .style("fill", function(d, i) { return color(i); });
+
+var rect = layer.selectAll("rect")
+    .data(function(d) { return d; })
+  .enter().append("rect")
+    .attr("x", function(d) { return x(d.x); })
+    .attr("y", height)
+    .attr("width", x.rangeBand())
+    .attr("height", 0);
+
+rect.transition()
+    .delay(function(d, i) { return i * 10; })
+    .attr("y", function(d) { return y(d.y0 + d.y); })
+    .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); });
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
+d3.selectAll("input").on("change", change);
+
+var timeout = setTimeout(function() {
+  d3.select("input[value=\"grouped\"]").property("checked", true).each(change);
+}, 2000);
+
+function change() {
+  clearTimeout(timeout);
+  if (this.value === "grouped") transitionGrouped();
+  else transitionStacked();
+}
+
+function transitionGrouped() {
+  y.domain([0, yGroupMax]);
+
+  rect.transition()
+      .duration(500)
+      .delay(function(d, i) { return i * 10; })
+      .attr("x", function(d, i, j) { return x(d.x) + x.rangeBand() / n * j; })
+      .attr("width", x.rangeBand() / n)
+    .transition()
+      .attr("y", function(d) { return y(d.y); })
+      .attr("height", function(d) { return height - y(d.y); });
+}
+
+function transitionStacked() {
+  y.domain([0, yStackMax]);
+
+  rect.transition()
+      .duration(500)
+      .delay(function(d, i) { return i * 10; })
+      .attr("y", function(d) { return y(d.y0 + d.y); })
+      .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); })
+    .transition()
+      .attr("x", function(d) { return x(d.x); })
+      .attr("width", x.rangeBand());
+}
+
+// Inspired by Lee Byron's test data generator.
+function bumpLayer(n, o) {
+
+  function bump(a) {
+    var x = 1 / (.1 + Math.random()),
+        y = 2 * Math.random() - .5,
+        z = 10 / (.1 + Math.random());
+    for (var i = 0; i < n; i++) {
+      var w = (i / n - y) * z;
+      a[i] += x * Math.exp(-w * w);
+    }
+  }
+
+  var a = [], i;
+  for (i = 0; i < n; ++i) a[i] = o + o * Math.random();
+  for (i = 0; i < 5; ++i) bump(a);
+  return a.map(function(d, i) { return {x: i, y: Math.max(0, d)}; });
+}
+</script>
+
+<script type="text/javascript">
+  
+var n = 6, // number of layers
+    m = 13; // number of samples per layer
+
+var margin = {top: 20, right: 50, bottom: 100, left: 75},
+    width = 740 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var svg = d3.select("#chart-svg").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("data/kick.csv", function (data){
+    
+    var headers = ["Under $1000","$1000 - 9999","$10000 - 19999","$20000 - 99999","$100K - 999999","Over $1 Million"];
+    
+    var layers = d3.layout.stack()(headers.map(function(priceRange) {
+        return data.map(function(d) {
+          return {x: d.Category, y: +d[priceRange]};
+        });
+    }));
+console.log(layers);
+    var yGroupMax = d3.max(layers, function(layer) { return d3.max(layer, function(d) { return d.y; }); });
+    var yStackMax = d3.max(layers, function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); });
+
+    var xScale = d3.scale.ordinal()
+        .domain(layers[0].map(function(d) { return d.x; }))
+        .rangeRoundBands([25, width], .08);
+
+    var y = d3.scale.linear()
+        .domain([0, yStackMax])
+        .range([height, 0]);
+
+    var color = d3.scale.ordinal()
+        .domain(headers)
+        .range(["#98ABC5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c"]);
+      
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .tickSize(0)
+        .tickPadding(6)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .tickFormat(d3.format(".2s"));
+
+    var layer = svg.selectAll(".layer")
+        .data(layers)
+        .enter().append("g")
+        .attr("class", "layer")
+        .style("fill", function(d, i) { return color(i); });
+
+    var rect = layer.selectAll("rect")
+        .data(function(d) { return d; })
+        .enter().append("rect")
+        .attr("x", function(d) { return xScale(d.x); })
+        .attr("y", height)
+        .attr("width", xScale.rangeBand())
+        .attr("height", 0);
+
+    rect.transition()
+        .delay(function(d, i) { return i * 10; })
+        .attr("y", function(d) { return y(d.y0 + d.y); })
+        .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); });
+
+    //********** AXES ************
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text").style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                  return "rotate(-45)" 
+                });
+    
+    svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(20,0)")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr({"x": -150, "y": -70})
+        .attr("dy", ".75em")
+        .style("text-anchor", "end")
+        .text("# of campaigns");
+
+    var legend = svg.selectAll(".legend")
+        .data(headers.slice().reverse())
+            .enter().append("g")
+            .attr("class", "legend")
+            .attr("transform", function(d, i) { return "translate(-20," + i * 20 + ")"; });
+       
+        legend.append("rect")
+            .attr("x", width - 18)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", color);
+    
+        legend.append("text")
+              .attr("x", width - 24)
+              .attr("y", 9)
+              .attr("dy", ".35em")
+              .style("text-anchor", "end")
+              .text(function(d) { return d;  });
+
+
+    d3.selectAll("input").on("change", change);
+
+    var timeout = setTimeout(function() {
+      d3.select("input[value=\"grouped\"]").property("checked", true).each(change);
+    }, 2000);
+
+    function change() {
+      clearTimeout(timeout);
+      if (this.value === "grouped") transitionGrouped();
+      else transitionStacked();
+    }
+
+    function transitionGrouped() {
+      y.domain([0, yGroupMax]);
+
+      rect.transition()
+          .duration(500)
+          .delay(function(d, i) { return i * 10; })
+          .attr("x", function(d, i, j) { return xScale(d.x) + xScale.rangeBand() / n * j; })
+          .attr("width", xScale.rangeBand() / n)
+        .transition()
+          .attr("y", function(d) { return y(d.y); })
+          .attr("height", function(d) { return height - y(d.y); });
+
+      rect.on("mouseover", function() { tooltip.style("display", null); })
+        .on("mouseout", function() { tooltip.style("display", "none"); })
+        .on("mousemove", function(d) {
+          var xPosition = d3.mouse(this)[0] - 15;
+          var yPosition = d3.mouse(this)[1] - 25;
+          tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+          tooltip.select("text").text("hello world");
+        });
+    };
+
+    function transitionStacked() {
+      y.domain([0, yStackMax]);
+
+      rect.transition()
+          .duration(500)
+          .delay(function(d, i) { return i * 10; })
+          .attr("y", function(d) { return y(d.y0 + d.y); })
+          .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); })
+        .transition()
+          .attr("x", function(d) { return xScale(d.x); })
+          .attr("width", xScale.rangeBand());
+
+      rect.on("mouseover", function() { tooltip.style("display", null); })
+        .on("mouseout", function() { tooltip.style("display", "none"); })
+        .on("mousemove", function(d) {
+          var xPosition = d3.mouse(this)[0] - 15;
+          var yPosition = d3.mouse(this)[1] - 25;
+          console.log(xPosition);
+          tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+          tooltip.select("text").text("hello world");
+        });
+    };
+
+    var tooltip = svg.append("g")
+        .attr("class", "tooltip");
+        
+    tooltip.append("rect")
+        .attr("width", 30)
+        .attr("height", 20)
+        .attr("fill", "red")
+        .style("opacity", 0.5);
+     
+    tooltip.append("text")
+        .attr("x", 15)
+        .attr("dy", "1.2em")
+        .style("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("font-weight", "bold");
+});
+
+
+</script>
+<script>
+function dashboard(id, fData){
+    var barColor = 'steelblue';
+    function segColor(c){ return {low:"#807dba", mid:"#e08214",high:"#41ab5d"}[c]; }
+    
+    // compute total for each state.
+    fData.forEach(function(d){d.total=d.freq.low+d.freq.mid+d.freq.high;});
+    
+    // function to handle histogram.
+    function histoGram(fD){
+        var hG={},    hGDim = {t: 60, r: 0, b: 30, l: 0};
+        hGDim.w = 500 - hGDim.l - hGDim.r, 
+        hGDim.h = 300 - hGDim.t - hGDim.b;
+            
+        //create svg for histogram.
+        var hGsvg = d3.select(id).append("svg")
+            .attr("width", hGDim.w + hGDim.l + hGDim.r)
+            .attr("height", hGDim.h + hGDim.t + hGDim.b).append("g")
+            .attr("transform", "translate(" + hGDim.l + "," + hGDim.t + ")");
+
+        // create function for x-axis mapping.
+        var x = d3.scale.ordinal().rangeRoundBands([0, hGDim.w], 0.1)
+                .domain(fD.map(function(d) { return d[0]; }));
+
+        // Add x-axis to the histogram svg.
+        hGsvg.append("g").attr("class", "x axis")
+            .attr("transform", "translate(0," + hGDim.h + ")")
+            .call(d3.svg.axis().scale(x).orient("bottom"));
+
+        // Create function for y-axis map.
+        var y = d3.scale.linear().range([hGDim.h, 0])
+                .domain([0, d3.max(fD, function(d) { return d[1]; })]);
+
+        // Create bars for histogram to contain rectangles and freq labels.
+        var bars = hGsvg.selectAll(".bar").data(fD).enter()
+                .append("g").attr("class", "bar");
+        
+        //create the rectangles.
+        bars.append("rect")
+            .attr("x", function(d) { return x(d[0]); })
+            .attr("y", function(d) { return y(d[1]); })
+            .attr("width", x.rangeBand())
+            .attr("height", function(d) { return hGDim.h - y(d[1]); })
+            .attr('fill',barColor)
+            .on("mouseover",mouseover)// mouseover is defined below.
+            .on("mouseout",mouseout);// mouseout is defined below.
+            
+        //Create the frequency labels above the rectangles.
+        bars.append("text").text(function(d){ return d3.format(",")(d[1])})
+            .attr("x", function(d) { return x(d[0])+x.rangeBand()/2; })
+            .attr("y", function(d) { return y(d[1])-5; })
+            .attr("text-anchor", "middle");
+        
+        function mouseover(d){  // utility function to be called on mouseover.
+            // filter for selected state.
+            var st = fData.filter(function(s){ return s.State == d[0];})[0],
+                nD = d3.keys(st.freq).map(function(s){ return {type:s, freq:st.freq[s]};});
+               
+            // call update functions of pie-chart and legend.    
+            pC.update(nD);
+            leg.update(nD);
+        }
+        
+        function mouseout(d){    // utility function to be called on mouseout.
+            // reset the pie-chart and legend.    
+            pC.update(tF);
+            leg.update(tF);
+        }
+        
+        // create function to update the bars. This will be used by pie-chart.
+        hG.update = function(nD, color){
+            // update the domain of the y-axis map to reflect change in frequencies.
+            y.domain([0, d3.max(nD, function(d) { return d[1]; })]);
+            
+            // Attach the new data to the bars.
+            var bars = hGsvg.selectAll(".bar").data(nD);
+            
+            // transition the height and color of rectangles.
+            bars.select("rect").transition().duration(500)
+                .attr("y", function(d) {return y(d[1]); })
+                .attr("height", function(d) { return hGDim.h - y(d[1]); })
+                .attr("fill", color);
+
+            // transition the frequency labels location and change value.
+            bars.select("text").transition().duration(500)
+                .text(function(d){ return d3.format(",")(d[1])})
+                .attr("y", function(d) {return y(d[1])-5; });            
+        }        
+        return hG;
+    }
+    
+    // function to handle pieChart.
+    function pieChart(pD){
+        var pC ={},    pieDim ={w:250, h: 250};
+        pieDim.r = Math.min(pieDim.w, pieDim.h) / 2;
+                
+        // create svg for pie chart.
+        var piesvg = d3.select(id).append("svg")
+            .attr("width", pieDim.w).attr("height", pieDim.h).append("g")
+            .attr("transform", "translate("+pieDim.w/2+","+pieDim.h/2+")");
+        
+        // create function to draw the arcs of the pie slices.
+        var arc = d3.svg.arc().outerRadius(pieDim.r - 10).innerRadius(0);
+
+        // create a function to compute the pie slice angles.
+        var pie = d3.layout.pie().sort(null).value(function(d) { return d.freq; });
+
+        // Draw the pie slices.
+        piesvg.selectAll("path").data(pie(pD)).enter().append("path").attr("d", arc)
+            .each(function(d) { this._current = d; })
+            .style("fill", function(d) { return segColor(d.data.type); })
+            .on("mouseover",mouseover).on("mouseout",mouseout);
+
+        // create function to update pie-chart. This will be used by histogram.
+        pC.update = function(nD){
+            piesvg.selectAll("path").data(pie(nD)).transition().duration(500)
+                .attrTween("d", arcTween);
+        }        
+        // Utility function to be called on mouseover a pie slice.
+        function mouseover(d){
+            // call the update function of histogram with new data.
+            hG.update(fData.map(function(v){ 
+                return [v.State,v.freq[d.data.type]];}),segColor(d.data.type));
+        }
+        //Utility function to be called on mouseout a pie slice.
+        function mouseout(d){
+            // call the update function of histogram with all data.
+            hG.update(fData.map(function(v){
+                return [v.State,v.total];}), barColor);
+        }
+        // Animating the pie-slice requiring a custom function which specifies
+        // how the intermediate paths should be drawn.
+        function arcTween(a) {
+            var i = d3.interpolate(this._current, a);
+            this._current = i(0);
+            return function(t) { return arc(i(t));    };
+        }    
+        return pC;
+    }
+    
+    // function to handle legend.
+    function legend(lD){
+        var leg = {};
+            
+        // create table for legend.
+        var legend = d3.select(id).append("table").attr('class','legend');
+        
+        // create one row per segment.
+        var tr = legend.append("tbody").selectAll("tr").data(lD).enter().append("tr");
+            
+        // create the first column for each segment.
+        tr.append("td").append("svg").attr("width", '16').attr("height", '16').append("rect")
+            .attr("width", '16').attr("height", '16')
+      .attr("fill",function(d){ return segColor(d.type); });
+            
+        // create the second column for each segment.
+        tr.append("td").text(function(d){ return d.type;});
+
+        // create the third column for each segment.
+        tr.append("td").attr("class",'legendFreq')
+            .text(function(d){ return d3.format(",")(d.freq);});
+
+        // create the fourth column for each segment.
+        tr.append("td").attr("class",'legendPerc')
+            .text(function(d){ return getLegend(d,lD);});
+
+        // Utility function to be used to update the legend.
+        leg.update = function(nD){
+            // update the data attached to the row elements.
+            var l = legend.select("tbody").selectAll("tr").data(nD);
+
+            // update the frequencies.
+            l.select(".legendFreq").text(function(d){ return d3.format(",")(d.freq);});
+
+            // update the percentage column.
+            l.select(".legendPerc").text(function(d){ return getLegend(d,nD);});        
+        }
+        
+        function getLegend(d,aD){ // Utility function to compute percentage.
+            return d3.format("%")(d.freq/d3.sum(aD.map(function(v){ return v.freq; })));
+        }
+
+        return leg;
+    }
+    
+    // calculate total frequency by segment for all state.
+    var tF = ['low','mid','high'].map(function(d){ 
+        return {type:d, freq: d3.sum(fData.map(function(t){ return t.freq[d];}))}; 
+    });    
+    
+    // calculate total frequency by state for all segment.
+    var sF = fData.map(function(d){return [d.State,d.total];});
+
+    var hG = histoGram(sF), // create the histogram.
+        pC = pieChart(tF), // create the pie-chart.
+        leg= legend(tF);  // create the legend.
+}
+</script>
+
+<script>
+var freqData=[
+{State:'AL',freq:{low:4786, mid:1319, high:249}}
+,{State:'AZ',freq:{low:1101, mid:412, high:674}}
+,{State:'CT',freq:{low:932, mid:2149, high:418}}
+,{State:'DE',freq:{low:832, mid:1152, high:1862}}
+,{State:'FL',freq:{low:4481, mid:3304, high:948}}
+,{State:'GA',freq:{low:1619, mid:167, high:1063}}
+,{State:'IA',freq:{low:1819, mid:247, high:1203}}
+,{State:'IL',freq:{low:4498, mid:3852, high:942}}
+,{State:'IN',freq:{low:797, mid:1849, high:1534}}
+,{State:'KS',freq:{low:162, mid:379, high:471}}
+];
+
+dashboard('#dashboard',freqData);
+</script>

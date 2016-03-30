@@ -1,0 +1,88 @@
+[	
+	{"values":[
+			{"x":"SmartPhone","y":53},
+			{"x":"Tablet","y":32},
+			{"x":"E-reader","y":8},
+			{"x":"Portablemediaplayer","y":3},
+			{"x":"Mobilephone","y":2}],
+		"key":"UK"},
+
+	{"values":[
+			{"x":"SmartPhone","y":44},
+			{"x":"Tablet","y":51},
+			{"x":"E-reader","y":2},
+			{"x":"Portablemediaplayer","y":2},
+			{"x":"Mobilephone","y":5}
+			], "key":"FRA"
+	},
+
+	{
+		"values":[
+			{"x":"SmartPhone","y":51},
+			{"x":"Tablet","y":26},
+			{"x":"E-reader","y":6},
+			{"x":"Portablemediaplayer","y":3},
+			{"x":"Mobilephone","y":3}
+			],"key":"GER"
+	},
+
+	{
+		"values":[
+			{"x":"SmartPhone","y":71},
+			{"x":"Tablet","y":38},
+			{"x":"E-reader","y":7},
+			{"x":"Portablemediaplayer","y":5},
+			{"x":"Mobilephone","y":6}
+			],"key":"ITA"
+	},
+
+	{
+		"values":[
+			{"x":"SmartPhone","y":44},
+			{"x":"Tablet","y":27},
+			{"x":"E-reader","y":7},
+			{"x":"Portablemediaplayer","y":5},
+			{"x":"Mobilephone","y":4}
+			],"key":"USA"
+	},
+
+	{
+		"values":[
+			{"x":"SmartPhone","y":45},
+			{"x":"Tablet","y":21},
+			{"x":"E-reader","y":4},
+			{"x":"Portablemediaplayer","y":6},
+			{"x":"Mobilephone","y":17}
+			],"key":"JPN"
+	},
+
+	{
+		"values":[
+			{"x":"SmartPhone","y":57},
+			{"x":"Tablet","y":33},
+			{"x":"E-reader","y":5},
+			{"x":"Portablemediaplayer","y":6},
+			{"x":"Mobilephone","y":6}
+			],"key":"AUS"
+	},
+
+	{
+		"values":[
+			{"x":"SmartPhone","y":70},
+			{"x":"Tablet","y":39},
+			{"x":"E-reader","y":7},
+			{"x":"Portablemediaplayer","y":4},
+			{"x":"Mobilephone","y":6}
+			],"key":"ESP"
+	},
+
+	{
+		"values":[
+			{"x":"SmartPhone","y":77},
+			{"x":"Tablet","y":42},
+			{"x":"E-reader","y":7},
+			{"x":"Portablemediaplayer","y":6},
+			{"x":"Mobilephone","y":5}
+			],"key":"CHN"
+	}
+]

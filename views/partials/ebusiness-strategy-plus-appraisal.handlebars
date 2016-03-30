@@ -1,0 +1,228 @@
+<h2 class="ui dividing header">E-business Strategy and Critical Appraisal</h2>
+<div class="ui segment">
+
+	<h3 class="ui dividing header">About this section</h3>
+	<p>Fill this in later</p>
+
+	<h3 id="strategy-overview" class="ui dividing header">E-business Strategy Overview <div class="sub header">review of the above content</div></h3>
+	<h4 class="ui header">Basically:</h4><p>Build the application, and pitch it to funding organizations. If they like it they either fund the application or copy it, if not the skills gained by building the application are an additional asset produced which could be used secure a reasonable income to generates additional funds to progress and market the business</p>
+
+	<p>Most of the development work will need to be done by myself since it's difficult to find funding of a e-business which is only a concept on a piece of paper, or worse a public facing website. Which is a huge liability, business ideas are not subject to copyright, the embodiment of that idea is. Which is why confidentiality and non-competition agreements are standard practice in venture capital application so that an applicant can share their business proposition and protect it.</p>
+
+	<p>Once some funding has been secured the next objective is field testing so that server performance, cost and client usage data can be calculated and suitable price brackets can be formulated. Suitable testing scenarios would be events such as go-north, sound-city, the fringe or any "city wide" event that runs for a few days or more and attracts tourists. The marketing plan further describes the process that would be required to market the application to the testing subjects and businesses in the host area, but to summarize it would mostly involve direct marketing (not the door to door sales kind) but the kind that requires communicating with the host community and gaining their support</p>
+
+	<p>Depending on the success of this process and feedback received a public production release would be the next objective focusing on the UK at first then translating the UI of application in to various languages so that the business can expand in to Europe (America should be another region to investigate in to expanding into but a multi-lingual application has more utility for tourists and the US has a unfamiliar legal system that would need to be research thoroughly</p>
+
+	<h4 id="income-streams" class="ui header">Income streams <div class="sub header">for this site</div></h4><p>Since I've already covered income streams for the application in this document I would also be justifiable to include potential methods of generating income for this site since it will be a drain on resources to keep it running. As covered already internet based marketing is a growing and diverse industry, A small personal site could generate income in the following ways:</p>
+	<h5> Banner advertising</h5><p>Not a particular favorite of mine as to many adds can ruin the content people come to view but it's an ends to a means. One issue here though is creating content will attract people (revisits are always a bonus). Tutorials provide a reasonable method to generate views to a site and a how to node/set up a site series would be of some use to people trying to develop their own sites.</p>
+	<h5> Blogging</h5> <p>Blogging can be a paid occupation if there is commerce interest in the content, i.e a whiskey distiller may want to influence a blogger who writes about whiskeys to give them a favorable review</p>
+	<p> either way</p>
+	<h5> <a href="http://static.googleusercontent.com/media/www.google.co.uk/en/uk/webmasters/docs/search-engine-optimization-starter-guide.pdf" target="_blank">Search engine optimization</a></h5> <p>This is a series processes of tailoring content on a web-page to generate more traffic. Implementing this is pretty straight forward, but i will need rework some of the MVC framework used in this site as I've used many slightly different layouts for various sections of this site to avoid conflicting assets and scripts. There'll be away around these issues it just may take some time to figure them out</p>
+
+	<h3 id="development-stages" class="ui dividing header">Stages of development <div class="sub header"> With an explanation of options, rational and relative trends</div></h3>
+		<p>Whether it's the development of a micro-enterprise clicks-and-bricks style e-business, or a large enterprise grade CRUD (create, read/retrieve, update, delete) data application, or real time chat service. There are two fundamental options available, <ol><li>out-source</li><li>D.I.Y</li></ol> each have there own merits and drawbacks. Out-sourcing is effective but (usually) expensive and runs the risk of being so uninvolved in the development of an e-business that the owner might not know how their web based e-business works. While a "develop it yourself" approach requires more time (a lot of time) a willingness to learn, and enough patients to continually trail and error (then re-read any and all instructions) through-out everything related to the development of the e-business <small>Well that's how I've been doing it</small></p>
+
+		<p>I picked the latter of the two as at the time it seemed like a good idea to gain some additional skills and learning experience. Here's the first few stages of development </p>
+
+		<h4 class="ui header">Learn the Ropes</h4>
+	<div class="ui divided list">
+		<div class="item">
+			<div class="content">
+				<div class="header">Setting up your local development environment</div>
+				<ul>You will need
+					<li>a computer (a cheep laptop should be suitable for this)</li>
+					<li>An operating system <p>I use a arch linux based system (fast, free, stable, secure with lots of open-source software available through the package management systems)</p></li>
+					<li>An Internet connection and browser</li>
+					<li>and the ability to make and edit text <p>sublime text is a good example of a text editor to use during development</p></li>
+					<li>A command-line terminal <p>common feature for most operating systems</p></li>
+				</ul>
+				<p>That's pretty much the tools I've spent most of the development process interacting with, i would not recommend using an integrated development environment as it's going to provide much of the same functionality as the above tools but with more liability (program crash) and use of resources</p>
+			</div>
+		</div>
+
+		<div class="item">
+			<div class="content">
+				<div class="header">Choose a frame work</div>
+				<p>This is the system/processes/stack that the e-business/web(app, service or site) will be running on.</p>
+				<ul>The options here are:
+					<li>Serve a static HTML document (popular during the 1990's)</li>
+					<li>LAMP (Linux, Apache, MySql, Python) and LAMP-like (PHP, RUBY, Django) used for static pages with some client side database integration. (commonly used during the 00's and still somewhat in use today) </li>
+					<li>Node JS (non-blocking server side javascript), web-pages function more like are event-driven applications through which dynamic data moves rather than a static document. (Launched around 2009 and rapidly gained in popularity)</li>
+				</ul>
+				<p>I choose node as it's more modern and provides some useful features along with an extensive selection modules and programs. Along with reducing the number of programming languages used when compared with a LAMP or LAMP-like frame work.</p>
+			</div>
+		</div>
+
+		<div class="item">
+			<div class="content">
+				<div class="header">Start building</div>
+				<p>Basically build/assemble many little projects to gain experience, familiarity and opinion on the various tools, libraries and programs available to use during development</p>
+				<p>Use available resources to build the individual features the application will need:</p>
+				<ul> examples of this are
+					<li>data visualization (d3.js provides this functionality)</li> 
+					<li>an authentication layer with social media integration (passport.js and socail media platform api provides this)</p>
+					<li>The user interface</li>
+					<li>javascript templating for rendering dynamic data (so far I've used EJS, backbone, and handlebars on various site builds)</li>
+				</ul>
+				<p>By trail and error this is an extremely tedious process. This site so far (no where near complete) has taken literally hundreds of hours or work as each event, DOM element and word has some code associated with it that is not rendered in the UI.Right click and select view source and you'll get a vague idea how much code and files it's taken just for this page and then include the MVC and ORM logic that goes on server side to get idea of how much work is required to get some basic functionality into a site.</p>
+
+				<div class="header">Same processes different projects</div>	<p>Fortunately the processes involved in developing a web-app that could become an e-business are transferable and scale-able so development should (theoretically) become more intuitive as projects progress</p>
+
+				<div class="header">Critically</div><p>Full stack web-development is not a walk in park, nor a realistic goal for someone with little or no prior knowledge to have with in a limited time frame and considerable collateral. Although as an exercise in problem solving the task provides an eccentric puzzle that can be solved in a magnitude of ways but but must be done precisely, one miss placed punctuation mark can reduce all functionality of the application to nothing.. which can be a nightmare to track down</p>
+			</div>
+		</div>
+	</div>
+
+	<h3 id="appraisal" class="ui dividing header">Critical Appraisal<div class="sub header">of the e-business plan/strategy</div></h3>
+	<p>The over all objective is possible, it is excessively difficult but can be done although time is the factor for example it has taken two or three solid (continual working) weeks just to create the graphs and charts used in this plan. While these data visualizations use static data (check the page source) rendering dynamic-data related to the actual functions of the business (localized consumer behavior data) will require more work.</p>
+
+	<p>Using cost-driven development structure significantly increases the require time to develop a functional prototype. This is unavoidable if any actual productivity/usability is to be achieved using currently available resources.</p> 
+
+	<div>
+<table class="ui teal striped definition table">
+<thead>
+	<tr>
+		<th></th>
+		<th>S.W.O.T Analysis</th>
+	</tr>
+</thead>
+<tbody>
+
+<tr>
+	<td class="two wide">Strengths</td>
+	<td>
+		<div class="ui divided list">
+			<div class="item">
+				<div class="header">Cost-driven structure</div>
+				<div class="description">Low development cost enables functional prototypes to be developed and pitched for funding and/or tested at an affordable cost.</div>
+			</div>
+			<div class="item">
+				<div class="header">Diversity</div>
+				<div class="description">Use of this application could easily be extended to more industries than just live music events industry. This increases the pool of potential B2B and B2C users.</div>
+			</div>
+			<div class="item">
+				<div class="header">Utility</div>
+				<div class="description">There is some obvious utility that the intended service can provide to consumers and businesses along with supporting independent open-source developers</div>
+			</div>
+			<div class="item">
+				<div class="header">Decline of the recording industry</div>
+				<div class="description">Turn over from streaming services along with the popularity of those services have resulted in independent labels and musicians making less money from records therefore are required to perform in order to generate income. Our service helps them plan and promote performances in a cost efficient manner</div>
+			</div>
+		</div>
+	</td>
+</tr>
+
+<tr>
+	<td class="two wide">Weaknesses</td>
+	<td>
+		<div class="ui divided list">
+			<div class="item">
+				<div class="header">Development time</div>
+				<div class="description">Due to the  cost driven approach to producing a functional prototype significantly increases the time required for development which is dependent on the amount time I can dedicate to the development process.</div>
+			</div>
+
+			<div class="item">
+				<div class="header">No guarantees of investment of commercial/or interest in the finished product</div>
+				<div class="description">This is a considerable weakness considering the amount of effort required to develop a prototype, as it could result as being a large waste of my time and money</div>
+			</div>
+
+			<div class="item">
+				<div class="header">Liabilities</div>
+				<div class="description">Researching the applicable legislation and my/the business's liability in the event of any and all potential incidents relating to the use of the product will be time consuming and possibly require the advice of a professional in-order to create serviceable terms, conditions and limitations to the use of the service </div>
+			</div>
+		</div>
+	</td>
+</tr>
+
+<tr>
+	<td class="two wide">Opportunities</td>
+	<td>
+		<div class="ui divided list">
+			<div class="item">
+				<div class="header">Funding</div>
+				<div class="description">
+					<ul>
+						<li>Self funded (current source)</li>
+						<li><a href="http://www.pentechvc.com/" target="_blank">Pentech venture capital</a></li>
+						<li><a href="https://www.parequity.com/profile/our-business/" target="_blank">Par-Equity</a></li>
+						<li><a href="https://www.startjoin.com/" target="_blank">StartJOIN</a> and <a href="https://startcoin.org/" target="_blank">StartCOIN</a></li>
+						<li>Business loans (unlikely)</li>
+						<li>Governmental (ominous given the activities of <a href="http://www.wired.co.uk/news/archive/2013-06/24/gchq-tempora-101" target="_blank">GCHQ</a>)</li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="header">Markets</div>
+				<div class="description">Providing relative "big data" to localized business is an interesting B2B USP. While providing consumers with data about active premises and events within their location has some use as-well, considering how popular social media platforms promotional features are limited by payment and/or previous engagement based algorithms</div>
+			</div>
+
+			<div class="item">
+				<div class="header">Out-source/Open-source</div>
+				<div class="description">Publishing an application programmable interface (API) would allow developers to use th data provided by the business in their own products, and in turn theoretically increase the points of consumption of the service provided. This could be done in websites, applications, GPS systems or any system that's able to connect to a server and process java-script. </div>
+				<div class="description">D3.js and related libraries that can be (and often are) used to visualize data and filter through big data. Enabling front end developers to distribute/sell visualizations and import additional data sets to business is also an interesting option as it allows the (paying) user experience to be customized/improved</div>
+			</div>
+		</div>
+	</td>
+</tr>
+
+<tr>
+	<td class="two wide">Threats</td>
+	<td>
+		<div class="ui divided list">
+
+			<div class="item">
+				<div class="header">Publishing the business plan</div>
+				<div class="description">Imposing limitations on content and audience who has access to a business's plan in order to protect the content of the plan and business idea is standard practice during the early stages of developing a business.<ul>These limitations can be imposed using<li>Non-disclosure agreements</li><li>Confidentiality agreements</li><li><small>and</small>Non-compete agreements</li></ul> making the business plan available to the general public would reduce any leverage the business has in seeking investment as an investor could easily take the plan and alter it enough to be considered their own work</div>
+			</div>
+
+			<div class="item">
+				<div class="header">Running out of funds</div>
+				<div class="description">this will probably happen at some point, so I will have to shut the servers down until more funds are secured</div>
+			</div>
+
+			<div class="item">
+				<div class="header">Legal liabilities</div>
+				<div class="description">Potentially there could be a lot of these which will require each to be researched to find common methods/process's implemented of reducing, removing the associated risk. <ul>For example, <li>process that allow users to protect their IP (intellectual property) is a legal requirement for many sites.</li><li> Extensive terms and conditions that apply conditions to the use of the service (usually to protect against malicious use).</li> <li>Data protection, fortunately encrypting personal/sensitive data is relatively easy to implement before storing the data in a database. This is commonly done with passwords and payment details. this is an example of a password that's been encrypted <code>$2a$10$adAOvSu0E2QVdv5czA5hVuDt1GVe2J7m9GOhm/FAZpizUYUSaZgjy</code></li></ul></div>
+			</div>
+
+		</div>
+	</td>
+</tr>
+</tbody>
+</table>
+
+
+<div class="ui raised segment"> <h3 class="ui dividing header">Ten Critical Questions</h3>
+  <a class="ui red ribbon label">Is the intended e-business relevant to current markets?</a>
+  	<p>Yes, considering that e-business  strategies/plans already exist as an additional volume in most business plans. The e-business proposed here is a tool to be utilized in as part of a PR strategy for a premises/event along with providing a platform for market-data collection and interpretation (interpolation would be the next logical advance) </p>
+  <a class="ui red ribbon label">Does the business do anything new?</a>
+  	<p>No. modularly everything has been done before in some direct or abstract from... it's just that few people have yet to assemble the parts and market the service in an interesting way. (insert apple joke)</p>
+  <a class="ui red ribbon label">What type of research/data has been presented?</a>
+  	<p>Mostly demographical and digital ad market data from either governmental or trustworthy business-research sources, spending logs, links to calculation tools, a few visualizations and a not yet functional development version of the application. Along with some social media experiments and the utilization of various modules/fetuses required by planned product/service (follow the links some may not highlight until hovered over)</p>
+  <a class="ui red ribbon label">Is the design/development plan appropriate for the business</a>
+  <p>considering the options are<ol><li> spend non-existent funds</li><li> send my plan around to anybody who would read it (publish it onto the internet) and hope for the best </li>or..<li> individually under-take the development of a prototype to test/pitch for investment</li> </ol>I would consider the later the most likely to produce a lasting result.</p>
+  <a class="ui red ribbon label">Did the research/presentation methods address potential sources of bias?</a>
+  	<p>No, it's pretty obvious there would be bias towards reinforcing the viability of the proposed business, considering one of the many uses of a business plan is to secure investment.</p>
+  <a class="ui red ribbon label">Was the plan developed according to the advised protocol?</a>
+  	<p>the recommendations to use "tools" such as wix, weebly and the never ending list of other online GUI "website" builders where ignored since the inherent limitations, security liabilities that result in the disclosure of business related documents and reduced learning experience resulted in a rash decision to actually learn how websites work, how to build them and this is the result (can be improved with developing the aesthetics, but I'll probably change them again as soon as hosting multiple sub-applications with in a single web-app becomes a viable option in a few months).</p>
+  <a class="ui red ribbon label">Were the research analyses performed correctly?</a>
+  	<p>well actually the data is used to generate vector based graphical visualizations using javascript, D3.js (data-driven-documents) and crossfillter.js (for large data sets). Since I am prone to bias it seems more credible to allow people to intemperate the data for them-self. Although one of the set of data driven documents is not fully functional as there where some issues in converting local area districts to coordinates, or adding additional sub-units to the topoJson file used in rendering one of the UK maps for a bubble overlay chart. But the data is there (in the source files for the page) along with the sources stated next to the graph it's self.</p>
+  <a class="ui red ribbon label">Does the data justify the plan as a viable business?</a>
+  	<p>A data driven web application providing consumers with useful, non-invasive localized data at a reasonable price seems viable enough considering in the UK alone web advertising is predicted to go from a billion dollar industry to multi billion dollar during the next few years</p>
+  <a class="ui red ribbon label">Are there any conflicts of interest?</a>
+  	<p>Usually</p>
+  <a class="ui red ribbon label">What conclusions/assumptions are made</a>
+  	<p>Yes, many. A few of these would be
+  		<ul>
+  			<li><div class="header">An investor</div>won't be willing to invest until there is a functional product/service in their hands/at their finger tips and has been protected from liabilities that would devalue it's market worth. (this also creates the feeling of urgency and exclusivity which are direct marketing tactics used to leverage/close a deal)</li>
+  			<li>development must be undertaken at a minimal cost</li>
+  			<li>GUI website builders don't enable users to utilize the full resources that the Internet provides. (that would take to longer to research than just learning to develop host and locally then setting up and updating to a cloud server) </li>
+  			<li>It's possible to learn full-stack development with out much prior knowledge and a lot of external pressure</li>
+  		</ul>
+  	</p>
+</div>
+
+
+	</div>
+</div>

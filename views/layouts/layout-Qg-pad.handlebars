@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marc McIntosh</title>
+
+    <!-- Viewport mobile tag for sensible mobile support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <!--STYLES-->
+        <link rel="stylesheet" href="/styles/colorbrewer.css">
+        <link rel="stylesheet" href="/styles/custom/nprogress.css">
+        <link rel="stylesheet" href="/styles/dcjs/dc.css">
+        <link rel="stylesheet" href="/styles/icon.css">
+        <link rel="stylesheet" href="/styles/importer.css">
+        <link rel="stylesheet" href="/styles/nvd3/nv.d3.css">
+        <link rel="stylesheet" href="/styles/semenatic/semantic.css">
+        <link rel="stylesheet" href="/styles/stickyfoo.css">
+        <!--STYLES END-->
+    <link rel="stylesheet" href="/components/Qg/css/leaflet.css">
+    <link rel="stylesheet" href="/components/Qg/css/leaflet-search.css">
+    <link rel="stylesheet" href="/components/Qg/css/leaflet-search.mobile.css">
+    <link rel="stylesheet" href="/components/Qg/css/L.Control.Sidebar.css">
+    <link rel="stylesheet" href="/components/Qg/css/leaflet.awesome-markers.css">
+    <link rel="stylesheet" href="/components/Qg/css/Control.Geocoder.css">
+    <link rel="stylesheet" href="/components/Qg/css/leaflet.draw.css">
+    <link rel="stylesheet" href="/components/Qg/css/L.Control.Locate.min.css">
+<style>
+#map{
+    margin: auto;
+    margin-top: auto;
+    height: 548px;
+    width: 989px;
+    border: 1px solid;
+      }
+#case-pad {
+    height: 1010px;
+    width: 660px;
+    border-radius: 40px 40px;
+    border: 1px solid #B5B2B0;
+    margin: auto;
+    background-color: #B5B2B0;
+}
+.lorem {
+    font-style: italic;
+    color: #AAA;
+}
+</style>
+</head>
+
+<body>
+    {{> Qg-nav}}
+    {{>errors}}
+    {{{ body }}}
+    {{> footer }}
+
+<!--SCRIPTS-->
+<script src="/js/dependencies/sails.io.js"></script>
+<script src="/js/dependencies/00-jquery.js"></script>
+<script src="/js/dependencies/01-handlebars-v1.3.0.js"></script>
+<script src="/js/dependencies/02-bootstrap.js"></script>
+<script src="/js/dependencies/03-nprogress.js"></script>
+<script src="/js/dependencies/04-d3.v3.min.js"></script>
+<script src="/js/dependencies/05-topojson.js"></script>
+<script src="/js/dependencies/08-nv.d3.js"></script>
+<script src="/js/d3.geo.projection.js"></script>
+<script src="/js/d3Bits/colorbrewer.js"></script>
+<script src="/js/d3Bits/math.js"></script>
+<script src="/js/d3Bits/ukMap.js"></script>
+<script src="/js/dcjs/01-crossfilter.js"></script>
+<script src="/js/dcjs/02-dc.js"></script>
+<script src="/js/jquery.stickyfoo.js"></script>
+<script src="/js/my-app.js"></script>
+<script src="/js/semantic/semantic.js"></script>
+<script src="/js/stream_layers.js"></script>
+<!--SCRIPTS END-->>
+
+<script src="/components/Qg/js/leaflet.js"></script>
+<script src="/components/Qg/js/L.Control.Locate.js"></script>
+<script src="/components/Qg/js/leaflet.awesome-markers.js"></script>
+<script src="/components/Qg/js/leaflet.draw.js"></script>
+<script src="/components/Qg/js/leaflet-search.js"></script>
+<script src="/components/Qg/js/L.Control.Sidebar.js"></script>
+<script src="/components/Qg/js/Control.Geocoder.js"></script>
+<script src="/components/Qg/js/leaflet.ChineseTmsProviders.js"></script>
+
+    <!-- Include this library for mobile touch support  -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
+<script src="/components/Qg/js/SliderControl.js"></script>
+<script type="text/javascript">
+//Test leaflet - Passed once again the image url needed editing but it was not totally nessacary
+    var map = new L.Map('map', {zoom: 9, center: new L.latLng([41.575730,13.002411]) });
+    map.addLayer(new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')); //base layer
+
+
+//leaflet side bar
+var sidebar = L.control.sidebar('sidebar', {
+    closeButton: true,
+    position: 'right'
+});
+map.addControl(sidebar);
+
+ map.on('click', function () {
+sidebar.hide();
+})
+sidebar.on('show', function () {
+console.log('Sidebar will be visible.');
+});
+sidebar.on('shown', function () {
+console.log('Sidebar is visible.');
+});
+sidebar.on('hide', function () {
+console.log('Sidebar will be hidden.');
+});
+sidebar.on('hidden', function () {
+console.log('Sidebar is hidden.');
+});
+L.DomEvent.on(sidebar.getCloseButton(), 'click', function () {
+console.log('Close button clicked.');
+});
+//Test Awesome markers - Passed (with some minor editing to the css file inorder to correct the image url)
+
+    L.marker([51.941196,4.512291], {icon: L.AwesomeMarkers.icon({icon: 'spinner', prefix: 'fa', markerColor: 'red', spin:true}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.927913,4.521303], {icon: L.AwesomeMarkers.icon({icon: 'coffee', prefix: 'fa', markerColor: 'red', iconColor: '#f28f82'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.936063,4.502077], {icon: L.AwesomeMarkers.icon({icon: 'cog', prefix: 'fa', markerColor: 'purple', iconColor: 'black'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.932835,4.506969], {icon: L.AwesomeMarkers.icon({icon: 'glass', prefix: 'fa', markerColor: 'green'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.930295,4.515209], {icon: L.AwesomeMarkers.icon({icon: 'shopping-cart', prefix: 'fa', markerColor: 'blue'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.930083,4.507742], {icon: L.AwesomeMarkers.icon({icon: 'info', prefix: 'fa', markerColor: 'orange'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+
+    L.marker([51.930454,4.527054], {icon: L.AwesomeMarkers.icon({icon: 'group', prefix: 'fa', markerColor: 'darkred'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.929607,4.527054], {icon: L.AwesomeMarkers.icon({icon: 'arrow-right', prefix: 'fa', markerColor: 'darkblue'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.928919,4.528856], {icon: L.AwesomeMarkers.icon({icon: 'twitter', prefix: 'fa', markerColor: 'cadetblue'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.930295,4.530745], {icon: L.AwesomeMarkers.icon({icon: 'phone', prefix: 'fa', markerColor: 'darkpurple'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.925055,4.512806], {icon: L.AwesomeMarkers.icon({icon: 'ambulance', prefix: 'fa', markerColor: 'darkgreen'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+    L.marker([51.925902,4.505768], {icon: L.AwesomeMarkers.icon({icon: 'medkit', prefix: 'fa', markerColor: 'darkblue'}) }).addTo(map).on('click', function () {
+sidebar.toggle();
+});
+
+
+// Locate Control test - works (kinda)
+    L.control.locate({
+        position: 'topleft',  // set the location of the control
+        drawCircle: true,  // controls whether a circle is drawn that shows the uncertainty about the location
+        follow: false,  // follow the user's location
+        setView: true, // automatically sets the map view to the user's location, enabled if `follow` is true
+        keepCurrentZoomLevel: false, // keep the current map zoom level when displaying the user's location. (if `false`, use maxZoom)
+        stopFollowingOnDrag: false, // stop following when the map is dragged if `follow` is true (deprecated, see below)
+        remainActive: false, // if true locate control remains active on click even if the user's location is in view.
+        markerClass: L.circleMarker, // L.circleMarker or L.marker
+        circleStyle: {},  // change the style of the circle around the user's location
+        markerStyle: {},
+        followCircleStyle: {},  // set difference for the style of the circle around the user's location while following
+        followMarkerStyle: {},
+        icon: 'fa fa-map-marker',  // class for icon, fa-location-arrow or fa-map-marker
+        iconLoading: 'fa fa-spinner fa-spin',  // class for loading icon
+        circlePadding: [0, 0], // padding around accuracy circle, value is passed to setBounds
+        metric: true,  // use metric or imperial units
+        onLocationError: function(err) {alert(err.message)},  // define an error callback function
+        onLocationOutsideMapBounds:  function(context) { // called when outside map boundaries
+            alert(context.options.strings.outsideMapBoundsMsg);
+        },
+        showPopup: true, // display a popup when the user click on the inner marker
+        strings: {
+            title: "Show me where I am",  // title of the locate control
+            popup: "You are within {distance} {unit} from this point",  // text to appear if user clicks on circle
+            outsideMapBoundsMsg: "You seem located outside the boundaries of the map" // default message for onLocationOutsideMapBounds
+        },
+        locateOptions: {}  // define location options e.g enableHighAccuracy: true or maxZoom: 10
+    }).addTo(map);
+// Leaflet Search
+    var data = [
+        {"loc":[41.575330,13.102411], "title":"aquamarine"},
+        {"loc":[41.575730,13.002411], "title":"black"},
+        {"loc":[41.807149,13.162994], "title":"blue"},
+        {"loc":[41.507149,13.172994], "title":"chocolate"},
+        {"loc":[41.847149,14.132994], "title":"coral"},
+        {"loc":[41.219190,13.062145], "title":"cyan"},
+        {"loc":[41.344190,13.242145], "title":"darkblue"},  
+        {"loc":[41.679190,13.122145], "title":"darkred"},
+        {"loc":[41.329190,13.192145], "title":"darkgray"},
+        {"loc":[41.379290,13.122545], "title":"dodgerblue"},
+        {"loc":[41.409190,13.362145], "title":"gray"},
+        {"loc":[41.794008,12.583884], "title":"green"}, 
+        {"loc":[41.805008,12.982884], "title":"greenyellow"},
+        {"loc":[41.536175,13.273590], "title":"red"},
+        {"loc":[41.516175,13.373590], "title":"rosybrown"},
+        {"loc":[41.506175,13.173590], "title":"royalblue"},
+        {"loc":[41.836175,13.673590], "title":"salmon"},
+        {"loc":[41.796175,13.570590], "title":"seagreen"},
+        {"loc":[41.436175,13.573590], "title":"seashell"},
+        {"loc":[41.336175,13.973590], "title":"silver"},
+        {"loc":[41.236175,13.273590], "title":"skyblue"},
+        {"loc":[41.546175,13.473590], "title":"yellow"},
+        {"loc":[41.239190,13.032145], "title":"white"}
+    ];
+    
+    var markersLayer = new L.LayerGroup();  //layer contain searched elements
+    map.addLayer(markersLayer);
+
+    var controlSearch = new L.Control.Search({layer: markersLayer, initial: false});
+
+    map.addControl( controlSearch );
+
+    ////////////populate map with markers from sample data
+    for(i in data) {
+        var title = data[i].title,  //value searched
+            loc = data[i].loc,      //position found
+            marker = new L.Marker(new L.latLng(loc), {title: title} );//se property searched
+        marker.bindPopup('title: '+ title );
+        markersLayer.addLayer(marker);
+    };
+
+
+//Things that need fixed... sidebar and draw geo coder -- use search
+
+</script>
+</body>
+</html>

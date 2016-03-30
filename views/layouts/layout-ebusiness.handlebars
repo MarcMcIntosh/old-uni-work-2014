@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marc McIntosh</title>
+
+    <!-- Viewport mobile tag for sensible mobile support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta http-equiv="content-type" content="text/html; charset=UTF8"> 
+
+    <!--STYLES-->
+    <link rel="stylesheet" href="/styles/colorbrewer.css">
+    <link rel="stylesheet" href="/styles/custom/nprogress.css">
+    <link rel="stylesheet" href="/styles/dcjs/dc.css">
+    <link rel="stylesheet" href="/styles/icon.css">
+    <link rel="stylesheet" href="/styles/importer.css">
+    <link rel="stylesheet" href="/styles/nvd3/nv.d3.css">
+    <link rel="stylesheet" href="/styles/semenatic/semantic.css">
+    <link rel="stylesheet" href="/styles/stickyfoo.css">
+    <!--STYLES END-->
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+<style type="text/css">
+
+/* custom fonts*/
+@import '//fonts.googleapis.com/css?family=Cardo:400italic,400,700';
+p {  font-family: "Cardo";
+   font-size: 16px;
+   line-height: 26px;
+   margin-bottom: 35px;
+}
+.subunit.SCT { fill: #ddc; }
+.subunit.WLS { fill: #cdd; }
+.subunit.NIR { fill: #cdc; }
+.subunit.ENG { fill: #dcd; }
+
+.subunit.IRL,
+.subunit-label.IRL {
+  display: none;
+}
+
+.subunit-boundary {
+  fill: none;
+  stroke: #777;
+  stroke-dasharray: 2,2;
+  stroke-linejoin: round;
+}
+
+.subunit-boundary.IRL {
+  stroke: #aaa;
+}
+
+.subunit-label {
+  fill: #777;
+  fill-opacity: .5;
+  font-size: 20px;
+  font-weight: 300;
+  text-anchor: middle;
+}
+
+.place,
+.place-label {
+  fill: #444;
+}
+/*Responceive map */
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: relative;
+    top: 10px;
+    left: 0;
+}
+</style>
+<!-- Digital add spending -->
+</head>
+
+<body>
+{{> ui-sidebar }}
+<div class="pusher">
+{{> ui-nav }}
+
+  <div class="ui grid">
+
+{{> errors }}
+{{{ body }}}
+  </div> <!-- Grid -->
+{{> footer }}
+</div><!-- Pusher -->
+</body>
+
+<!--TEMPLATES-->
+
+<!--TEMPLATES END-->
+
+<!--SCRIPTS-->
+<script src="/js/dependencies/sails.io.js"></script>
+<script src="/js/dependencies/00-jquery.js"></script>
+<script src="/js/dependencies/01-handlebars-v1.3.0.js"></script>
+<script src="/js/dependencies/02-bootstrap.js"></script>
+<script src="/js/dependencies/03-nprogress.js"></script>
+<script src="/js/dependencies/04-d3.v3.min.js"></script>
+<script src="/js/dependencies/05-topojson.js"></script>
+<script src="/js/dependencies/08-nv.d3.js"></script>
+<script src="/js/d3.geo.projection.js"></script>
+<script src="/js/d3Bits/colorbrewer.js"></script>
+<script src="/js/d3Bits/math.js"></script>
+<script src="/js/d3Bits/ukMap.js"></script>
+<script src="/js/dcjs/01-crossfilter.js"></script>
+<script src="/js/dcjs/02-dc.js"></script>
+<script src="/js/jquery.stickyfoo.js"></script>
+<script src="/js/my-app.js"></script>
+<script src="/js/semantic/semantic.js"></script>
+<script src="/js/stream_layers.js"></script>
+<!--SCRIPTS END-->
+
+
+<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+</script>
+
+  </script>
+
+<!-- -->
+<script type="text/javascript">
+$('.sidebar')
+  .sidebar('attach events', '.toggle.item')
+</script>
+<script type="text/javascript">
+    $(document).ready(function() {
+  $('#footer').stickyfoo();
+});
+</script>
+<script type="text/javascript">
+  $('.ui.accordion')
+  .accordion()
+;
+</script>
+<script type="text/javascript">
+$('.ui.dropdown')
+  .dropdown({
+    // you can use any ui transition
+    transition: 'drop'
+  })
+;
+</script>
+
+<script type="text/javascript">
+
+nv.addGraph(function() {
+    var chart = nv.models.multiBarChart()
+      .transitionDuration(350)
+      .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
+      .rotateLabels(0)      //Angle to rotate x-axis labels.
+      .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+      .groupSpacing(0.1)    //Distance between each group of bars.
+    ;
+    d3.select('#format-chart svg')
+    .datum([
+      { "values" : [
+        { "y" : 11.21, "x" : "2011" },
+        { "y" : 12.63, "x" : "2012" },
+        { "y" : 14.03, "x" : "2013" },
+        { "y" : 15.47, "x" : "2014" },
+        { "y" : 16.49, "x" : "2015" },
+        { "y" : 17.34, "x" : "2016" },
+        { "y" : 18.25, "x" : "2017" }
+        ], "key" : "Search-Engines"},
+      { "values" : [ 
+        { "y" : 7.340, "x" : "2011" }, 
+        { "y" : 7.99, "x" : "2012" },
+        { "y" : 8.92, "x" : "2013" },
+        { "y" : 10.08, "x" : "2014" },
+        { "y" : 11.17, "x" : "2015" },
+        { "y" :12.36, "x" : "2016" },
+        { "y" : 13.39, "x" : "2017" }
+        ], "key" : "Banners" }, 
+      { "values" : [
+        { "y" : 4.96, "x" : "2011" },
+        { "y" : 5.14, "x" : "2012" },
+        { "y" : 5.44, "x" : "2013" },
+        { "y" : 5.82, "x" : "2014", },
+        { "y" : 6.12, "x" : "2015", },
+        { "y" : 6.38, "x" : "2016", },
+        { "y" : 6.61, "x" : "2017" }
+        ], "key" : "Listings"}
+      ])
+    .call(chart);
+    nv.utils.windowResize(function(){ chart.update(); });
+    return chart
+  });
+
+</script>
+ <!-- Modile advertising spending by country -->
+<script type="text/javascript">
+
+nv.addGraph(function() {
+    var chart = nv.models.multiBarChart()
+      .transitionDuration(350)
+      .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
+      .rotateLabels(0)      //Angle to rotate x-axis labels.
+      .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+      .groupSpacing(0.1)    //Distance between each group of bars.
+    ;
+    d3.select('#mobile-chart svg')
+    .datum([
+      { values: [ 
+        { "x" : 2011, "y" : 0.323 },
+        { "x" : 2012, "y" : 0.835 },
+        { "x" : 2013, "y" : 1.586 },
+        { "x" : 2014, "y" : 2.538 },
+        { "x" : 2015, "y" : 3.680 },
+        { "x" : 2016, "y" : 4.784 },
+        { "x" : 2017, "y" : 5.885 }
+      ], key:"UK" },
+      { values: [
+        { "x" : 2011, "y" : 0.112 },
+        { "x" : 2012, "y" : 0.208 },
+        { "x" : 2013, "y" : 0.436 },
+        { "x" : 2014, "y" : 0.851 },
+        { "x" : 2015, "y" : 1.361 },
+        { "x" : 2016, "y" : 1.991 },
+        { "x" : 2017, "y" : 2.787 }
+      ], key:"Germany" },
+      { values: [
+        { "x" : 2011, "y" : 0.087 },
+        { "x" : 2012, "y" : 0.130 },
+        { "x" : 2013, "y" : 0.240 },
+        { "x" : 2014, "y" : 0.431 },
+        { "x" : 2015, "y" : 0.690 }, 
+        { "x" : 2016, "y" : 1.000 },
+        { "x" : 2017, "y" : 1.361 }
+      ], key:"France" },
+      { values: [
+        { "x" : 2011, "y" : 0.063 },
+        { "x" : 2012, "y" : 0.104 },
+        { "x" : 2013, "y" : 0.198 },
+        { "x" : 2014, "y" : 0.366 },
+        { "x" : 2015, "y" : 0.568 },
+        { "x" : 2016, "y" : 0.733 },
+        { "x" : 2017, "y" : 0.916 }
+      ], key:"Italy" },
+      { values: [
+        { "x" : 2011, "y" : 0.045 },
+        { "x" : 2012, "y" : 0.078 },
+        { "x" : 2013, "y" : 0.172 },
+        { "x" : 2014, "y" : 0.307 },
+        { "x" : 2015, "y" : 0.460 },
+        { "x" : 2016, "y" : 0.598 },
+        { "x" : 2017, "y" : 0.747}
+      ], key:"Netherlands" },
+      { values: [
+        { "x" : 2011, "y" : 0.021 },
+        { "x" : 2012, "y" : 0.057 },
+        { "x" : 2013, "y" : 0.142 },
+        { "x" : 2014, "y" : 0.238 },
+        { "x" : 2015, "y" : 0.333 },
+        { "x" : 2016, "y" : 0.416 },
+        { "x" : 2017, "y" : 0.483 }
+      ], key:"Sweden" },
+      { values: [
+        { "x" : 2011, "y" : 0.023 },
+        { "x" : 2012, "y" : 0.080 },
+        { "x" : 2013, "y" : 0.109 },
+        { "x" : 2014, "y" : 0.183 },
+        { "x" : 2015, "y" : 0.265 },
+        { "x" : 2016, "y" : 0.339 },
+        { "x" : 2017, "y" : 0.400 }
+      ], key:"Norway" },
+      { values: [
+        { "x" : 2011, "y" : 0.026 },
+        { "x" : 2012, "y" : 0.048 },
+        { "x" : 2013, "y" : 0.105 },
+        { "x" : 2014, "y" : 0.177 },
+        { "x" : 2015, "y" : 0.247 },
+        { "x" : 2016, "y" : 0.339 },
+        { "x" : 2017, "y" : 0.380}
+      ], key:"Denmark" },
+      { values: [
+        { "x" : 2011, "y" : 0.021 },
+        { "x" : 2012, "y" : 0.035 },
+        { "x" : 2013, "y" : 0.068 },
+        { "x" : 2014, "y" : 0.128 },
+        { "x" : 2015, "y" : 0.224 },
+        { "x" : 2016, "y" : 0.370 },
+        { "x" : 2017, "y" : 0.574 }
+      ], key:"Spain" },
+      { values: [
+        { "x" : 2011, "y" : 0.010 },
+        { "x" : 2012, "y" : 0.020 },
+        { "x" : 2013, "y" : 0.043 },
+        { "x" : 2014, "y" : 0.077 },
+        { "x" : 2015, "y" : 0.108 },
+        { "x" : 2016, "y" : 0.132 },
+        { "x" : 2017, "y" : 0.152}
+      ], key:"Finland" },
+      { values: [
+        { "x" : 2011, "y" : 0.050 },
+        { "x" : 2012, "y" : 0.107 },
+        { "x" : 2013, "y" : 0.491 },
+        { "x" : 2014, "y" : 1.092 },
+        { "x" : 2015, "y" : 1.262 },
+        { "x" : 2016, "y" : 1.377 },
+        { "x" : 2017, "y" : 1.499 }
+      ], key:"Other" }
+  ])
+    .call(chart);
+    nv.utils.windowResize(function(){ chart.update(); });
+    return chart
+  });
+
+</script>
+
+<script type="text/javascript">
+
+nv.addGraph(function() {
+    var chart = nv.models.multiBarChart()
+      .transitionDuration(350)
+      .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
+      .rotateLabels(0)      //Angle to rotate x-axis labels.
+      .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+      .groupSpacing(0.1)    //Distance between each group of bars.
+    ;
+    d3.select('#digital-add-chart svg')
+    .datum([
+      { values: [ 
+        { "x" : 2011, "y" : 7.63 },
+        { "x" : 2012, "y" : 8.60 },
+        { "x" : 2013, "y" : 9.63 },
+        { "x" : 2014, "y" : 10.83 },
+        { "x" : 2015, "y" : 11.70 },
+        { "x" : 2016, "y" : 12.52 },
+        { "x" : 2017, "y" : 13.27 }
+      ], key:"UK" },
+    { values: [
+      { "x" : 2011, "y" : 4.57 },
+      { "x" : 2012, "y" : 5.05 },
+      { "x" : 2013, "y" : 5.65 },
+      { "x" : 2014, "y" : 6.22 },
+      { "x" : 2015, "y" : 6.59 },
+      { "x" : 2016, "y" : 6.94 },
+      { "x" : 2017, "y" : 7.29 }
+    ], key:"Germany" },
+    { values: [
+      { "x" : 2011, "y" : 2.49 },
+      { "x" : 2012, "y" : 2.64 },
+      { "x" : 2013, "y" : 2.80 },
+      { "x" : 2014, "y" : 3.05 },
+      { "x" : 2015, "y" : 3.26 }, 
+      { "x" : 2016, "y" : 3.46 },
+      { "x" : 2017, "y" : 3.65 }
+    ], key:"France" },
+    { values: [
+      { "x" : 2011, "y" : 1.44 },
+      { "x" : 2012, "y" : 1.52 },
+      { "x" : 2013, "y" : 1.65 },
+      { "x" : 2014, "y" : 1.83 },
+      { "x" : 2015, "y" : 2.05 },
+      { "x" : 2016, "y" : 2.28 },
+      { "x" : 2017, "y" : 2.51 }
+    ], key:"Italy" },
+    { values: [
+      { "x" : 2011, "y" : 1.37 },
+      { "x" : 2012, "y" : 1.48 },
+      { "x" : 2013, "y" : 1.60 },
+      { "x" : 2014, "y" : 1.72 },
+      { "x" : 2015, "y" : 1.84 },
+      { "x" : 2016, "y" : 1.95 },
+      { "x" : 2017, "y" : 2.05 }
+    ], key:"Netherlands" },
+    { values: [
+      { "x" : 2011, "y" : 0.83 },
+      { "x" : 2012, "y" : 0.91 },
+      { "x" : 2013, "y" : 1.01 },
+      { "x" : 2014, "y" : 1.10 },
+      { "x" : 2015, "y" : 1.18 },
+      { "x" : 2016, "y" : 1.25 },
+      { "x" : 2017, "y" : 1.31 }
+    ], key:"Sweden" },
+    { values: [
+      { "x" : 2011, "y" : 0.74 },
+      { "x" : 2012, "y" : 0.79 },
+      { "x" : 2013, "y" : 0.85 },
+      { "x" : 2014, "y" : 0.91 },
+      { "x" : 2015, "y" : 0.97 },
+      { "x" : 2016, "y" : 1.03 },
+      { "x" : 2017, "y" : 1.08 }
+    ], key:"Norway" },
+    { values: [
+      { "x" : 2011, "y" : 0.65 },
+      { "x" : 2012, "y" : 0.73 },
+      { "x" : 2013, "y" : 0.80 },
+      { "x" : 2014, "y" : 0.86 },
+      { "x" : 2015, "y" : 0.92 },
+      { "x" : 2016, "y" : 0.99 },
+      { "x" : 2017, "y" : 1.05 }
+    ], key:"Denmark" },
+    { values: [
+      { "x" : 2011, "y" : 0.28 },
+      { "x" : 2012, "y" : 0.31 },
+      { "x" : 2013, "y" : 0.35 },
+      { "x" : 2014, "y" : 0.37 },
+      { "x" : 2015, "y" : 0.39 },
+      { "x" : 2016, "y" : 0.41 },
+      { "x" : 2017, "y" : 0.42 }
+    ], key:"Finland" },
+    { values: [
+      { "x" : 2011, "y" : 1.15 },
+      { "x" : 2012, "y" : 1.14 },
+      { "x" : 2013, "y" : 1.15 },
+      { "x" : 2014, "y" : 1.24 },
+      { "x" : 2015, "y" : 1.36 },
+      { "x" : 2016, "y" : 1.47 },
+      { "x" : 2017, "y" : 1.57 }
+    ], key:"Spain" },
+    { values: [
+      { "x" : 2011, "y" : 2.35 },
+      { "x" : 2012, "y" : 2.60 },
+      { "x" : 2013, "y" : 2.91 },
+      { "x" : 2014, "y" : 3.25 },
+      { "x" : 2015, "y" : 3.53 },
+      { "x" : 2016, "y" : 3.80 },
+      { "x" : 2017, "y" : 4.05 }
+    ], key:"Other" }
+  ])
+    .call(chart);
+    nv.utils.windowResize(function(){ chart.update(); });
+    return chart
+  });
+
+</script>
+<script type="text/javascript">
+
+nv.addGraph(function() {
+    var chart = nv.models.multiBarChart()
+      .transitionDuration(350)
+      .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
+      .rotateLabels(0)      //Angle to rotate x-axis labels.
+      .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+      .groupSpacing(0.1)    //Distance between each group of bars.
+    ;
+    d3.select('#OfComOne-chart svg')
+    .datum([ 
+{ values:[
+  { "y" :684, "x": 2008 },
+  { "y" :755, "x": 2009 },
+  { "y" :1050, "x": 2010 },
+  { "y" :1280, "x": 2011 },
+  { "y" :1479, "x": 2012 },
+  { "y" :1862, "x": 2013 }
+  ], key:"Display"},
+{values:[
+  { "y" :1942, "x": 2008 },
+  { "y" :2097, "x": 2009 },
+  { "y" :2245, "x": 2010 },
+  { "y" :2708, "x": 2011 },
+  { "y" :3087, "x": 2012 },
+  { "y" :3495, "x": 2013 }
+  ], key:"Paid for search"},
+{ values:[
+  { "y" :713, "x": 2008 },
+  { "y" :658, "x": 2009 },
+  { "y" :718, "x": 2010 },
+  { "y" :759, "x": 2011 },
+  { "y" :818, "x": 2012 },
+  { "y" :887, "x": 2013 }
+  ],key:"Classifieds"},
+{ values:[
+  { "y" :10, "x": 2008 },
+  { "y" :31, "x": 2009 },
+  { "y" :84, "x": 2010 },
+  { "y" :75, "x": 2011 },
+  { "y" :64, "x": 2012 },
+  { "y" :57, "x": 2013 }
+  ],key:"Other"}
+])
+    .call(chart);
+    nv.utils.windowResize(function(){ chart.update(); });
+    return chart
+  });
+
+</script>
+<script type="text/javascript">
+
+nv.addGraph(function() {
+    var chart = nv.models.multiBarChart()
+      .transitionDuration(350)
+      .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
+      .rotateLabels(0)      //Angle to rotate x-axis labels.
+      .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+      .groupSpacing(0.1)    //Distance between each group of bars.
+    ;
+    d3.select('#OfComTwo-chart svg')
+    .datum([
+  { values:[
+{ "y" :50.2, "x": 2008 },
+{ "y" :53.2, "x": 2009 },
+{ "y" :65.3, "x": 2010 },
+{ "y" :67.4, "x": 2011 },
+{ "y" :69.4, "x": 2012 },
+{ "y" :56.5, "x": 2013 }
+  ],key: "Search"},
+  { values:[
+{ "y" :47.9, "x": 2008 },
+{ "y" :43.5, "x": 2009 },
+{ "y" :33.2, "x": 2010 },
+{ "y" :29.5, "x": 2011 },
+{ "y" :28.5, "x": 2012 },
+{ "y" :41.9, "x": 2013 }
+  ],key:"Display"},
+  { values:[
+{ "y" :1.9, "x": 2008 },
+{ "y" :3, "x": 2009 },
+{ "y" :1.5, "x": 2010 },
+{ "y" :3 , "x": 2011 },
+{ "y" :1.7, "x": 2012 },
+{ "y" :1.3, "x": 2013 }
+  ],key: "SMS and other"},
+  { values:[
+{ "y" :0, "x": 2008 },
+{ "y" :0, "x": 2009 },
+{ "y" :0, "x": 2010 },
+{ "y" :0, "x": 2011 },
+{ "y" :0.4, "x": 2012 },
+{ "y" :0.3, "x": 2013 }
+  ],key: "Classified"}
+])
+    .call(chart);
+    nv.utils.windowResize(function(){ chart.update(); });
+    return chart
+  });
+
+</script>
+<script type="text/javascript">
+
+// D3 uses unix time timesed by 1000 (millseconds)
+var testdata = [
+  {
+    "key" : "Mobile Advertising Expenditure (millions)" ,
+    "bar": true,
+    "values" : [ [1199188800000, 26.6], [ 1230811200000, 37.6], [1262347200000, 83], [1293883200000, 203.2], [1325419200000, 528.5], [1357041600000, 1031] ]
+  } ,
+  {
+    "key" : " Adult internet on mobile phone take-up" ,
+    "values" : [ [1199188800000, 20], [1230811200000, 21], [1262347200000, 32], [1293883200000,39], [1325419200000, 49], [1357041600000, 61] ]
+  }
+].map(function(series) {
+  series.values = series.values.map(function(d) { return {x: d[0], y: d[1] } });
+  return series;
+});
+
+
+var chart;
+
+nv.addGraph(function() {
+    chart = nv.models.linePlusBarChart()
+        .margin({top: 30, right: 60, bottom: 50, left: 70})
+        .x(function(d,i) { return i })
+        .color(d3.scale.category10().range());
+
+    chart.xAxis.tickFormat(function(d) {
+      var dx = testdata[0].values[d] && testdata[0].values[d].x || 0;
+      return dx ? d3.time.format('%Y')(new Date(dx)) : '';
+      })
+      .showMaxMin(false);
+
+    chart.y1Axis
+        .tickFormat(d3.format(',f'));
+
+    chart.y2Axis
+        .tickFormat(function(d) { return d3.format(',f')(d) + '%' });
+
+    chart.bars.forceY([0]).padData(true);
+    chart.lines.forceY([0,100]);
+
+    d3.select('#takeup-chart svg')
+        .datum(testdata)
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(function(){ chart.update(); });
+
+    chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+    return chart
+});
+</script>
+<script type="text/javascript">
+d3.json('data/shareOfAdSpend.json', function(data) {
+  nv.addGraph(function() {
+    var chart = nv.models.cumulativeLineChart()
+                  .x(function(d) { return d[0] })
+                  .y(function(d) { return d[1]/100 }) //adjusting, 100% is 1.00, not 100 as it is in the data
+                  .color(d3.scale.category10().range())
+                  .useInteractiveGuideline(true)
+                  ;
+
+     chart.xAxis
+        .tickFormat(function(d) {
+            return d3.time.format('%Y')(new Date(d))
+          });
+
+    chart.yAxis
+        .tickFormat(d3.format(',.1%'));
+
+    d3.select('#adspend-chart svg')
+        .datum(data)
+        .call(chart);
+
+    //TODO: Figure out a good way to do this automatically
+    nv.utils.windowResize(function(){ chart.update(); });
+
+    return chart
+  });
+});
+
+</script>
+<script type="text/javascript">
+d3.json('data/mobileSpendPerHead.json', function(data) {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart()
+      .transitionDuration(350)
+      .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
+      .rotateLabels(0)      //Angle to rotate x-axis labels.
+      .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+      .groupSpacing(0.1)    //Distance between each group of bars.
+    ;
+    d3.select('#mob-adspend-chart svg')
+    .datum(data)
+    .call(chart);
+    nv.utils.windowResize(function(){ chart.update(); });
+    return chart
+  });
+});
+
+</script>
+<script>
+historicalBarChart = [ 
+  {
+    key: "Smartphone use",
+    values: [
+      { 
+        "label" : "UK" ,
+        "value" : 63
+      } , 
+      { 
+        "label" : "FRA" , 
+        "value" : 57
+      } , 
+      { 
+        "label" : "GER" , 
+        "value" : 62
+      } , 
+      { 
+        "label" : "ITA" , 
+        "value" : 76
+      } , 
+      { 
+        "label" : "USA" ,
+        "value" : 50
+      } , 
+      { 
+        "label" : "JPN" , 
+        "value" : 77
+      } , 
+      { 
+        "label" : "AUS" , 
+        "value" : 69
+      } , 
+      { 
+        "label" : "ESP" , 
+        "value" : 77
+      },
+      { 
+        "label" : "CHN" , 
+        "value" : 80
+      }
+    ]
+  }
+];
+
+
+
+
+nv.addGraph(function() {  
+  var chart = nv.models.discreteBarChart()
+      .x(function(d) { return d.label })
+      .y(function(d) { return d.value })
+      .staggerLabels(true)
+      //.staggerLabels(historicalBarChart[0].values.length > 8)
+      .tooltips(false)
+      .showValues(true)
+      .transitionDuration(250)
+      .forceY([0,100])
+      ;
+
+  d3.select('#smartphone-chart svg')
+      .datum(historicalBarChart)
+      .call(chart);
+
+  nv.utils.windowResize(function(){ chart.update(); });
+
+  return chart
+});
+
+
+</script>
+<script type="text/javascript">
+d3.json('data/portDev.json', function(data) {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart()
+      .transitionDuration(350)
+      .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
+      .rotateLabels(0)      //Angle to rotate x-axis labels.
+      .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+      .groupSpacing(0.1)    //Distance between each group of bars.
+      .forceY([0,100])
+    ;
+    d3.select('#portDev-chart svg')
+    .datum(data)
+    .call(chart);
+    nv.utils.windowResize(function(){ chart.update(); });
+    return chart
+  });
+});
+</script>
+
+<script>
+var sexRingChart   = dc.pieChart("#chart-ring-year"),
+    countryBarChart  = dc.barChart("#chart-hist-spend"),
+    nationalPieChart = dc.pieChart("#areaPieChart"),
+    regionPieChart = dc.pieChart("#regionPieChart"),
+    populationRowChart = dc.barChart("#chart-row-spenders"),
+    dataTable = dc.dataTable("#data-table");
+
+d3.csv("data/uk/ukdemo.csv", function(cvs){
+  var ndx = crossfilter(cvs),
+    ageDim  = ndx.dimension(function(d) {return +d.AGE;}),
+    populationDim = ndx.dimension(function(d) {return +d.POPULATION;}),
+    regionDim  = ndx.dimension(function(d) {return d.REGION;}),
+    countryDim = ndx.dimension(function(d) {return d.COUNTRY;}),
+    sexDim =ndx.dimension(function(d) {return d.SEX;});
+    populationPerRegion = regionDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerCountry = countryDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerAge = ageDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerSex = sexDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    countryHist    = countryDim.group().reduceSum(function(d) {return +d.POPULATION/1000000;});
+
+sexRingChart
+    .width(100).height(100)
+    .dimension(sexDim)
+    .group(populationPerSex)
+    .innerRadius(20);
+
+nationalPieChart
+    .width(150).height(150)
+    .dimension(countryDim)
+    .group(populationPerCountry);
+
+regionPieChart
+    .width(250).height(250)
+    .dimension(regionDim)
+    .group(populationPerRegion)
+    ;
+
+countryBarChart
+  .width(400)
+  .height(200)
+  .barPadding(0.1)
+  .outerPadding(0.05)
+    .xAxisLabel("Country")
+    .yAxisLabel("Population (millions)")
+    .dimension(countryDim)
+    .group(countryHist)
+    .x(d3.scale.ordinal())
+    .xUnits(dc.units.ordinal);
+
+
+countryBarChart.xAxis().ticks();
+countryBarChart.yAxis().ticks();
+
+populationRowChart
+    .width(400).height(400)
+    .margins({top: 10, right: 50, bottom: 30, left: 60})
+    .barPadding(0.1)
+    .outerPadding(0.05)
+    .xAxisPadding(500)
+    .dimension(ageDim)
+    .group(populationPerAge)
+    .elasticY(true)
+    .yAxisLabel("Population")
+    .xAxisLabel("Age")
+    .x(d3.scale.linear().domain([0, 91]));
+    //.xUnits(dc.units.ordinal);
+
+dc.renderAll();
+});
+</script>
+<script>
+
+
+var urbanData = [
+  { 
+    "key": "Urban population",
+    "bar": true,
+    "values":[ [-283953600000, 41381472], [-252417600000, 41661202], [-220881600000, 41900114], [-189345600000, 42098400], [-157723200000, 42294196], [-126187200000, 42452048], [-94651200000, 42603817], [-63115200000, 42733856], [-31492800000, 42833742], [43200000, 42925829], [31579200000, 43056861], [63115200000, 43295638], [94737600000, 43470962], [126273600000, 43590038], [157809600000, 43677888], [189345600000, 43757644], [220968000000, 43833733], [252504000000, 43925435], [284040000000, 44054299], [315576000000, 44195960], [347198400000, 44271630], [378734400000, 44228171], [410270400000, 44215089], [441806400000, 44257473], [473428800000, 44329755], [504964800000, 44404206], [536500800000, 44470325], [568036800000, 44540723], [599659200000, 44628280], [631195200000, 44733264], [662731200000, 44855736], [694267200000, 45011752], [725889600000, 45154426], [757425600000, 45304828], [788961600000, 45459651], [820497600000, 45610451], [852120000000, 45762480], [883656000000, 45931122], [915192000000, 46119137], [946728000000, 46319551], [978350400000, 46557334], [1009886400000, 46930583], [1041422400000, 47323791], [1072958400000, 47767769], [1104580800000, 48269624], [1136116800000, 48798541], [1167652800000, 49351705], [1199188800000, 49913475], [1230811200000, 50463084], [1262347200000, 51030310], [1293883200000, 51600299], [1325419200000, 52124728], [1357041600000, 52618579] ]
+  }, 
+  {
+    "key":"Urban share of population",
+    "values":[ [-283953600000, 78.374], [-252417600000, 78.237], [-220881600000, 78.099], [-189345600000, 77.96], [-157723200000, 77.821], [-126187200000, 77.682], [-94651200000, 77.541], [-63115200000, 77.4], [-31492800000, 77.259], [43200000, 77.117], [31579200000, 77.03], [63115200000, 77.195], [94737600000, 77.358], [126273600000, 77.521], [157809600000, 77.683], [189345600000, 77.844], [220968000000, 78.005], [252504000000, 78.164], [284040000000, 78.323], [315576000000, 78.481], [347198400000, 78.588], [378734400000, 78.539], [410270400000, 78.489], [441806400000, 78.44], [473428800000, 78.39], [504964800000, 78.34], [536500800000, 78.29], [568036800000, 78.24], [599659200000, 78.19], [631195200000, 78.14], [662731200000, 78.112], [694267200000, 78.172], [725889600000, 78.232], [757425600000, 78.293], [788961600000, 78.353], [820497600000, 78.413], [852120000000, 78.472], [883656000000, 78.532], [915192000000, 78.591], [946728000000, 78.651], [978350400000, 78.751], [1009886400000, 79.047], [1041422400000, 79.339], [1072958400000, 79.629], [1104580800000, 79.915], [1136116800000, 80.199], [1167652800000, 80.479], [1199188800000, 80.757], [1230811200000, 81.031], [1262347200000, 81.302], [1293883200000, 81.57], [1325419200000, 81.834], [1357041600000, 82.092] ]
+  }
+].map(function(series) {
+  series.values = series.values.map(function(d) { return {x: d[0], y: d[1] } });
+  return series;
+});
+
+/*
+//For testing single data point
+var testdata = [
+  {
+    "key" : "Quantity" ,
+    "bar": true,
+    "values" : [ [ 1136005200000 , 1271000.0] ]
+  } ,
+  {
+    "key" : "Price" ,
+    "values" : [ [ 1136005200000 , 71.89] ]
+  }
+].map(function(series) {
+  series.values = series.values.map(function(d) { return {x: d[0], y: d[1] } });
+  return series;
+});
+*/
+
+var chart;
+
+nv.addGraph(function() {
+    chart = nv.models.linePlusBarChart()
+        .margin({top: 30, right: 60, bottom: 50, left: 70})
+        .x(function(d,i) { return i })
+        .color(d3.scale.category10().range());
+
+    chart.xAxis.tickFormat(function(d) {
+      var dx = urbanData[0].values[d] && urbanData[0].values[d].x || 0;
+      return dx ? d3.time.format('%Y')(new Date(dx)) : '';
+      })
+      .showMaxMin(false);
+
+    chart.y1Axis
+        .tickFormat(d3.format(',f'));
+
+    chart.y2Axis
+        .tickFormat(function(d) { return d3.format(',f')(d) + '%' });
+
+    chart.bars.forceY([0]).padData(false);
+    //chart.lines.forceY([0]);
+
+    d3.select('#urbanPopulationChart svg')
+        .datum(urbanData)
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+    return chart;
+});
+
+</script>
+</body>
+</html>

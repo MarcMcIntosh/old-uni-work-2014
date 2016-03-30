@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marc McIntosh</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8"> 
+    <meta charset="utf-8">
+
+    <!-- Viewport mobile tag for sensible mobile support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!--  
+        Stylesheets and Preprocessors
+        ==============================
+
+        You can always bring in CSS files manually with `<link>` tags, or asynchronously
+        using a solution like AMD (RequireJS).  Or, if you like, you can take advantage 
+        of Sails' conventional asset pipeline (boilerplate Gruntfile).
+
+        By default, stylesheets from your `assets/linker/styles` folder are included
+        here automatically (between STYLES and STYLES END). Both CSS (.css) and LESS (.less)
+        are supported. In production, your styles will be minified and concatenated into
+        a single file.
+        
+        To customize any part of the built-in behavior, just edit your Gruntfile.
+        For example, here are a few things you could do:
+            
+            + Change the order of your CSS files
+            + Import stylesheets from other directories
+            + Use a different or additional preprocessor, like SASS, SCSS or Stylus
+    -->
+
+    <!--STYLES-->
+    <link rel="stylesheet" href="/styles/colorbrewer.css">
+    <link rel="stylesheet" href="/styles/custom/nprogress.css">
+    <link rel="stylesheet" href="/styles/dcjs/dc.css">
+    <link rel="stylesheet" href="/styles/icon.css">
+    <link rel="stylesheet" href="/styles/importer.css">
+    <link rel="stylesheet" href="/styles/nvd3/nv.d3.css">
+    <link rel="stylesheet" href="/styles/semenatic/semantic.css">
+    <link rel="stylesheet" href="/styles/stickyfoo.css">
+    <!--STYLES END-->
+<style type="text/css">
+.subunit.SCT { fill: #ddc; }
+.subunit.WLS { fill: #cdd; }
+.subunit.NIR { fill: #cdc; }
+.subunit.ENG { fill: #dcd; }
+
+.subunit.IRL,
+.subunit-label.IRL {
+  display: none;
+}
+
+.subunit-boundary {
+  fill: none;
+  stroke: #777;
+  stroke-dasharray: 2,2;
+  stroke-linejoin: round;
+}
+
+.subunit-boundary.IRL {
+  stroke: #aaa;
+}
+
+.subunit-label {
+  fill: #777;
+  fill-opacity: .5;
+  font-size: 20px;
+  font-weight: 300;
+  text-anchor: middle;
+}
+
+.place,
+.place-label {
+  fill: #444;
+}
+/*Responceive map */
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: relative;
+    top: 10px;
+    left: 0;
+}
+
+form {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+
+path {  stroke: #fff; }
+path:hover {  opacity:0.9; }
+rect:hover {  fill:blue; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {  display: none; }
+.legend{
+    margin-bottom:76px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+
+</style>
+</head>
+
+<body>
+
+{{{ body }}}
+<!--
+    Client-side Templates
+    ========================
+
+    HTML templates are important prerequisites of modern, rich client applications.
+    To work their magic, frameworks like Backbone, Angular, Ember, and Knockout require
+    that you load these templates client-side.
+
+    By default, your Gruntfile is configured to automatically load and precompile
+    client-side JST templates in your `assets/linker/templates` folder, then
+    include them here automatically (between TEMPLATES and TEMPLATES END).
+
+    To customize this behavior to fit your needs, just edit your Gruntfile.
+    For example, here are a few things you could do:
+
+        + Import templates from other directories
+        + Use a different template engine (handlebars, jade, dust, etc.)
+        + Internationalize your client-side templates using a server-side
+          stringfile before they're served.
+-->
+
+<!--TEMPLATES-->
+
+<!--TEMPLATES END-->
+
+<!--
+
+  Client-side Javascript
+  ========================
+
+  You can always bring in JS files manually with `script` tags, or asynchronously
+  on the client using a solution like AMD (RequireJS).  Or, if you like, you can
+  take advantage of Sails' conventional asset pipeline (boilerplate Gruntfile).
+
+  By default, filesin your `assets/linker/js` folder are included here
+  automatically (between SCRIPTS and SCRIPTS END).  Both JavaScript (.js) and
+  CoffeeScript (.coffee) are supported. In production, your scripts will be minified
+  and concatenated into a single file.
+
+  To customize any part of the built-in behavior, just edit your Gruntfile.
+  For example, here are a few things you could do:
+
+      + Change the order of your scripts
+      + Import scripts from other directories
+      + Use a different preprocessor, like TypeScript
+
+-->
+<!-- help http://www.codeproject.com/Articles/693841/Making-Dashboards-with-Dc-js-Part-Using-Crossfil -->
+<!--SCRIPTS-->
+<script src="/js/dependencies/sails.io.js"></script>
+<script src="/js/dependencies/00-jquery.js"></script>
+<script src="/js/dependencies/01-handlebars-v1.3.0.js"></script>
+<script src="/js/dependencies/02-bootstrap.js"></script>
+<script src="/js/dependencies/03-nprogress.js"></script>
+<script src="/js/dependencies/04-d3.v3.min.js"></script>
+<script src="/js/dependencies/05-topojson.js"></script>
+<script src="/js/dependencies/08-nv.d3.js"></script>
+<script src="/js/d3.geo.projection.js"></script>
+<script src="/js/d3Bits/colorbrewer.js"></script>
+<script src="/js/d3Bits/math.js"></script>
+<script src="/js/d3Bits/ukMap.js"></script>
+<script src="/js/dcjs/01-crossfilter.js"></script>
+<script src="/js/dcjs/02-dc.js"></script>
+<script src="/js/jquery.stickyfoo.js"></script>
+<script src="/js/my-app.js"></script>
+<script src="/js/semantic/semantic.js"></script>
+<script src="/js/stream_layers.js"></script>
+<!--SCRIPTS END-->
+<script>
+var sexRingChart   = dc.pieChart("#chart-ring-year"),
+    countryBarChart  = dc.barChart("#chart-hist-spend"),
+    nationalPieChart = dc.pieChart("#areaPieChart"),
+    regionPieChart = dc.pieChart("#regionPieChart"),
+    populationRowChart = dc.barChart("#chart-row-spenders"),
+    dataTable = dc.dataTable("#data-table");
+
+d3.csv("data/uk/ukdemo.csv", function(cvs){
+  var ndx = crossfilter(cvs),
+    ageDim  = ndx.dimension(function(d) {return +d.AGE;}),
+    populationDim = ndx.dimension(function(d) {return +d.POPULATION;}),
+    regionDim  = ndx.dimension(function(d) {return d.REGION;}),
+    countryDim = ndx.dimension(function(d) {return d.COUNTRY;}),
+    sexDim =ndx.dimension(function(d) {return d.SEX;});
+    populationPerRegion = regionDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerCountry = countryDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerAge = ageDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    populationPerSex = sexDim.group().reduceSum(function(d) {return +d.POPULATION;}),
+    countryHist    = countryDim.group().reduceSum(function(d) {return +d.POPULATION/1000000;});
+
+sexRingChart
+    .width(100).height(100)
+    .dimension(sexDim)
+    .group(populationPerSex)
+    .innerRadius(20);
+
+nationalPieChart
+    .width(150).height(150)
+    .dimension(countryDim)
+    .group(populationPerCountry);
+
+regionPieChart
+    .width(300).height(300)
+    .dimension(regionDim)
+    .group(populationPerRegion)
+    ;
+
+countryBarChart
+  .width(400)
+  .height(200)
+  .barPadding(0.1)
+  .outerPadding(0.05)
+    .xAxisLabel("Country")
+    .yAxisLabel("Population (millions)")
+    .dimension(countryDim)
+    .group(countryHist)
+    .x(d3.scale.ordinal())
+    .xUnits(dc.units.ordinal);
+
+
+countryBarChart.xAxis().ticks();
+countryBarChart.yAxis().ticks();
+
+populationRowChart
+    .width(400).height(400)
+    .margins({top: 10, right: 50, bottom: 30, left: 60})
+    .barPadding(0.1)
+    .outerPadding(0.05)
+    .xAxisPadding(500)
+    .dimension(ageDim)
+    .group(populationPerAge)
+    .elasticY(true)
+    .yAxisLabel("Population")
+    .xAxisLabel("Age")
+    .x(d3.scale.linear().domain([0, 91]));
+    //.xUnits(dc.units.ordinal);
+
+dc.renderAll();
+});
+</script>
+
+</body>
+</html>

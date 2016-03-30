@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marc McIntosh</title>
+
+    <!-- Viewport mobile tag for sensible mobile support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <!--STYLES-->
+        <link rel="stylesheet" href="/styles/colorbrewer.css">
+        <link rel="stylesheet" href="/styles/custom/nprogress.css">
+        <link rel="stylesheet" href="/styles/dcjs/dc.css">
+        <link rel="stylesheet" href="/styles/icon.css">
+        <link rel="stylesheet" href="/styles/importer.css">
+        <link rel="stylesheet" href="/styles/nvd3/nv.d3.css">
+        <link rel="stylesheet" href="/styles/semenatic/semantic.css">
+        <link rel="stylesheet" href="/styles/stickyfoo.css">
+        <!--STYLES END-->
+    <link rel="stylesheet" href="/components/Qg/css/leaflet.css">
+    <link rel="stylesheet" href="/components/Qg/css/leaflet-search.css">
+    <link rel="stylesheet" href="/components/Qg/css/leaflet-search.mobile.css">
+    <link rel="stylesheet" href="/components/Qg/css/L.Control.Sidebar.css">
+    <link rel="stylesheet" href="/components/Qg/css/leaflet.awesome-markers.css">
+    <link rel="stylesheet" href="/components/Qg/css/Control.Geocoder.css">
+    <link rel="stylesheet" href="/components/Qg/css/leaflet.draw.css">
+    <link rel="stylesheet" href="/components/Qg/css/L.Control.Locate.min.css">
+<style>
+
+#map {
+    margin: auto;
+    margin-top: 35px;
+    height:374px;
+    width: 250px;
+    border: 1px solid;
+      }
+#case {
+    height: 560px;
+    width: 277px;
+    border-radius: 40px 40px;
+    border: 1px solid #B5B2B0;
+    margin: auto;
+    background-color: #B5B2B0;
+}
+#earsection {margin-top: 36px; margin-left: 72px; height: 16px;}
+#camera {float: left; width: 16px; height: 16px; border: 1px solid #000; border-radius: 9px 9px;}
+#speaker {float: left; width: 54px; height: 5px; margin-left: 15px; border: 1px solid #000; border-radius: 7px 7px;}
+#screen {clear: both; width: 250px; height: 374px; margin: auto; margin-top: 35px; border: 1px solid #000;}
+#button {height: 56px; width: 56px; border: 1px solid #000; border-radius: 28px 28px; margin: auto; margin-top: 22px;}
+#buttonsquare {height: 17px; width: 17px; border: 1px solid #000; border-radius: 5px; margin: auto; margin-top: 18px; }
+.lorem {
+    font-style: italic;
+    color: #AAA;
+}
+</style>
+</head>
+
+<body>
+    {{> Qg-nav}}
+    {{>errors}}
+    {{{ body }}}
+    {{> footer }}
+
+<!--SCRIPTS-->
+<script src="/js/dependencies/sails.io.js"></script>
+<script src="/js/dependencies/00-jquery.js"></script>
+<script src="/js/dependencies/01-handlebars-v1.3.0.js"></script>
+<script src="/js/dependencies/02-bootstrap.js"></script>
+<script src="/js/dependencies/03-nprogress.js"></script>
+<script src="/js/dependencies/04-d3.v3.min.js"></script>
+<script src="/js/dependencies/05-topojson.js"></script>
+<script src="/js/dependencies/08-nv.d3.js"></script>
+<script src="/js/d3.geo.projection.js"></script>
+<script src="/js/d3Bits/colorbrewer.js"></script>
+<script src="/js/d3Bits/math.js"></script>
+<script src="/js/d3Bits/ukMap.js"></script>
+<script src="/js/dcjs/01-crossfilter.js"></script>
+<script src="/js/dcjs/02-dc.js"></script>
+<script src="/js/jquery.stickyfoo.js"></script>
+<script src="/js/my-app.js"></script>
+<script src="/js/semantic/semantic.js"></script>
+<script src="/js/stream_layers.js"></script>
+<!--SCRIPTS END-->>
+
+<script src="/components/Qg/js/leaflet.js"></script>
+<script src="/components/Qg/js/L.Control.Locate.js"></script>
+<script src="/components/Qg/js/leaflet.awesome-markers.js"></script>
+<script src="/components/Qg/js/leaflet.draw.js"></script>
+<script src="/components/Qg/js/leaflet-search.js"></script>
+<script src="/components/Qg/js/L.Control.Sidebar.js"></script>
+<script src="/components/Qg/js/Control.Geocoder.js"></script>
+<script src="/components/Qg/js/leaflet.ChineseTmsProviders.js"></script>
+
+    <!-- Include this library for mobile touch support  -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
+<script src="/components/Qg/js/SliderControl.js"></script>
+<script type="text/javascript">
+//Test leaflet - Passed once again the image url needed editing but it was not totally nessacary
+    var map = L.map('map').setView([51.932994,4.509373], 14);
+
+    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: 'Map data &copy; OpenStreetMap contributors',
+        detectRetina: true
+    }).addTo(map);
+
+//leaflet side bar
+        var sidebar = L.control.sidebar('sidebar', {
+            closeButton: true,
+            position: 'left'
+        });
+        map.addControl(sidebar);
+
+        setTimeout(function () {
+            sidebar.show();
+        }, 500);
+
+        var marker = L.marker([51.2, 7]).addTo(map).on('click', function () {
+            sidebar.toggle();
+        });
+
+        map.on('click', function () {
+            sidebar.hide();
+        })
+
+        sidebar.on('show', function () {
+            console.log('Sidebar will be visible.');
+        });
+
+        sidebar.on('shown', function () {
+            console.log('Sidebar is visible.');
+        });
+
+        sidebar.on('hide', function () {
+            console.log('Sidebar will be hidden.');
+        });
+
+        sidebar.on('hidden', function () {
+            console.log('Sidebar is hidden.');
+        });
+
+        L.DomEvent.on(sidebar.getCloseButton(), 'click', function () {
+            console.log('Close button clicked.');
+        });
+
+//Test Awesome markers - Passed (with some minor editing to the css file inorder to correct the image url)
+
+    L.marker([51.941196,4.512291], {icon: L.AwesomeMarkers.icon({icon: 'spinner', prefix: 'fa', markerColor: 'red', spin:true}) }).addTo(map)
+    L.marker([51.927913,4.521303], {icon: L.AwesomeMarkers.icon({icon: 'coffee', prefix: 'fa', markerColor: 'red', iconColor: '#f28f82'}) }).addTo(map)
+    L.marker([51.936063,4.502077], {icon: L.AwesomeMarkers.icon({icon: 'cog', prefix: 'fa', markerColor: 'purple', iconColor: 'black'}) }).addTo(map)
+    L.marker([51.932835,4.506969], {icon: L.AwesomeMarkers.icon({icon: 'glass', prefix: 'fa', markerColor: 'green'}) }).addTo(map)
+    L.marker([51.930295,4.515209], {icon: L.AwesomeMarkers.icon({icon: 'shopping-cart', prefix: 'fa', markerColor: 'blue'}) }).addTo(map)
+    L.marker([51.930083,4.507742], {icon: L.AwesomeMarkers.icon({icon: 'info', prefix: 'fa', markerColor: 'orange'}) }).addTo(map)
+    L.marker([51.930454,4.527054], {icon: L.AwesomeMarkers.icon({icon: 'group', prefix: 'fa', markerColor: 'darkred'}) }).addTo(map)
+    L.marker([51.929607,4.527054], {icon: L.AwesomeMarkers.icon({icon: 'arrow-right', prefix: 'fa', markerColor: 'darkblue'}) }).addTo(map)
+    L.marker([51.928919,4.528856], {icon: L.AwesomeMarkers.icon({icon: 'twitter', prefix: 'fa', markerColor: 'cadetblue'}) }).addTo(map)
+    L.marker([51.930295,4.530745], {icon: L.AwesomeMarkers.icon({icon: 'phone', prefix: 'fa', markerColor: 'darkpurple'}) }).addTo(map)
+    L.marker([51.925055,4.512806], {icon: L.AwesomeMarkers.icon({icon: 'ambulance', prefix: 'fa', markerColor: 'darkgreen'}) }).addTo(map)
+    L.marker([51.925902,4.505768], {icon: L.AwesomeMarkers.icon({icon: 'medkit', prefix: 'fa', markerColor: 'darkblue'}) }).addTo(map)
+
+
+// Locate Control test - works (kinda)
+    L.control.locate({
+        position: 'topleft',  // set the location of the control
+        drawCircle: true,  // controls whether a circle is drawn that shows the uncertainty about the location
+        follow: false,  // follow the user's location
+        setView: true, // automatically sets the map view to the user's location, enabled if `follow` is true
+        keepCurrentZoomLevel: false, // keep the current map zoom level when displaying the user's location. (if `false`, use maxZoom)
+        stopFollowingOnDrag: false, // stop following when the map is dragged if `follow` is true (deprecated, see below)
+        remainActive: false, // if true locate control remains active on click even if the user's location is in view.
+        markerClass: L.circleMarker, // L.circleMarker or L.marker
+        circleStyle: {},  // change the style of the circle around the user's location
+        markerStyle: {},
+        followCircleStyle: {},  // set difference for the style of the circle around the user's location while following
+        followMarkerStyle: {},
+        icon: 'fa fa-map-marker',  // class for icon, fa-location-arrow or fa-map-marker
+        iconLoading: 'fa fa-spinner fa-spin',  // class for loading icon
+        circlePadding: [0, 0], // padding around accuracy circle, value is passed to setBounds
+        metric: true,  // use metric or imperial units
+        onLocationError: function(err) {alert(err.message)},  // define an error callback function
+        onLocationOutsideMapBounds:  function(context) { // called when outside map boundaries
+            alert(context.options.strings.outsideMapBoundsMsg);
+        },
+        showPopup: true, // display a popup when the user click on the inner marker
+        strings: {
+            title: "Show me where I am",  // title of the locate control
+            popup: "You are within {distance} {unit} from this point",  // text to appear if user clicks on circle
+            outsideMapBoundsMsg: "You seem located outside the boundaries of the map" // default message for onLocationOutsideMapBounds
+        },
+        locateOptions: {}  // define location options e.g enableHighAccuracy: true or maxZoom: 10
+    }).addTo(map);
+
+</script>
+</body>
+</html>
